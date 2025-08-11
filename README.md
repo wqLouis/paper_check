@@ -47,3 +47,9 @@ paper_check/
 ├── uv.lock                # Dependency lockfile
 └── README.md              # Project documentation
 ```
+
+### Dependencies
+
+1. llama_cpp
+2. pandas
+3. openpyxl

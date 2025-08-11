@@ -1,154 +1,32 @@
-print("loading libraries")
-from llama_cpp import Llama
-import os
-import sqlite3 as sql
-from src.unwrap import unwrap
-import numpy as np
-print("done")
+import flet as ft
 
-model_path: str = "./models/Qwen3-Embedding-4B-Q6_K.gguf"
-pfile_target_path: str = "./db/papers/"
+def main(page: ft.Page) -> None:
+    page.title = "Paper Check"
 
-class pattributes:
-    """
-    types available for past papers
-    """
-    types:set[str] = set(["DSE", "ALV", "CE"])
-    sbjs:set[str] = set(["MATH", "PHY", "CHEM", "BIO", "ICT"])
+    def examine_page(event: ft.ControlEvent) -> None:
+        pass
 
-def init_db() -> Exception | sql.Connection:
-    """
-    Initialize sqlite database with basic structures
-    """
+    def analysis_page(event: ft.ControlEvent) -> None:
+        pass
+
+    def register_page(event: ft.ControlEvent) -> None:
+        pass
+
+    examine_btn: ft.MenuItemButton = ft.MenuItemButton(content = ft.Text("Examine"), on_click = examine_page) # type: ignore
+    analysis_btn: ft.MenuItemButton = ft.MenuItemButton(content = ft.Text("Analysis"), on_click = analysis_page)
+    register_btn: ft.MenuItemButton = ft.MenuItemButton(content = ft.Text("Register Paper"), on_click = register_page)
+
+    menu_bar: ft.MenuBar = ft.MenuBar(
+        controls = [
+        examine_btn,
+        analysis_btn,
+        register_btn],
+        expand = True
+    )
     
-    if not os.path.exists("./db"):
-        try:
-            os.mkdir("./db")
-        except Exception as e:
-            return e
-    
-    con: sql.Connection = sql.connect("./db/past_papers.db")
-    cur: sql.Cursor = con.cursor()
+    page.add(ft.Container(content = ft.Row([ft.Text("Paper Check"),menu_bar])))
+    page.update()
 
-    table_count:int = int(cur.execute("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table';").fetchone()[0])
-    if table_count > 0:
-        return con
-    try:
-        cur.execute(
-        """
-        CREATE TABLE psource(
-            pid INTEGER PRIMARY KEY AUTOINCREMENT,
-            pfile_path TEXT NOT NULL,
-            pyear INTEGER NOT NULL,
-            psbj TEXT,
-            ptype TEXT
-        );
-        """
-        )
-        cur.execute(
-        """
-        CREATE TABLE qsource(
-            qid INTEGER PRIMARY KEY AUTOINCREMENT,
-            qstr TEXT NOT NULL,
-            qebd_v BLOB NOT NULL,
-            pid INTEGER NOT NULL,
-            FOREIGN KEY (pid) REFERENCES psource(pid)
-        );
-        """
-        )
-        
-        con.commit()
 
-        return con
-    except Exception as e:
-        return e
 
-def load_model(path: str) -> Exception | Llama:
-    if not os.path.exists(path):
-        return FileNotFoundError(f"failed to load model '{path}'")
-    try:
-        ebd = Llama(path)
-        return ebd
-    except Exception as e:
-        return e
-
-def register_papers(pfile_path:str, pyear:int, psbj:str, ptype:str) -> Exception | None:
-    
-    """
-        Register a past paper into database
-
-        Args:
-            pfile_path: Past paper file path
-            pyear: The year of past paper
-            psbj: Past paper subject (supports: ["MATH", "PHY", "CHEM", "BIO", "ICT"])
-            ptype: Past paper type (supports: ["DSE", "ALV", "CE"])
-    """
-
-    if not os.path.exists(pfile_path):
-        return FileNotFoundError(f"failed to find paper '{pfile_path}'")
-    if not os.path.exists(pfile_target_path):
-        return FileNotFoundError(f"target directory not found '{pfile_target_path}'")
-    if psbj not in pattributes.sbjs:
-        return ValueError(f"has no type for psbj={psbj}\nwe have these sbjs {str(pattributes.sbjs)}")
-    if ptype not in pattributes.types:
-        return ValueError(f"has no type for psbj={ptype}\nwe have these types {str(pattributes.types)}")
-    
-    con: sql.Connection = unwrap(init_db())
-    insert_query: str = """
-    INSERT INTO psource (pfile_path, pyear, psbj, ptype)
-    VALUES (?, ?, ?, ?)
-    """
-    cur: sql.Cursor = con.cursor()
-
-    cur.execute(insert_query, (pfile_target_path+os.path.basename(pfile_path), pyear, psbj, ptype))
-    con.commit()
-    return
-
-def examine(data: list[str] | str, pid: int) -> Exception | None:
-    """
-    Examine the input and create a sqlite db for further analsys
-    Returns:
-        None:
-    """
-    
-    con: sql.Connection = unwrap(init_db())
-    cur: sql.Cursor = con.cursor()
-
-    pid_count = cur.execute("SELECT count(*) FROM psource WHERE pid = ?;", (pid,)).fetchone()[0]
-    if pid_count == 0:
-        return ValueError(f"pid={pid} is not in psource")
-    
-    model: Llama = unwrap(load_model(model_path))
-    
-    insert_query: str = """
-        INSERT INTO qsource (qstr, qebd_v, pid)
-        VALUES (?, ?, ?)
-    """
-    if isinstance(data, list):
-        for i in data:
-            qebd_v:bytes = np.array(model.embed(i)).tobytes()
-            cur.execute(insert_query,(i, qebd_v, pid))
-    else:
-        qebd_v:bytes = np.array(model.embed(data)).tobytes()
-        cur.execute(insert_query, (data, qebd_v, pid))
-    
-    con.commit()
-
-def analysis() -> Exception | None:
-    """
-    Analysis simularity mode
-    
-    Args:
-        model_path: Path of embedding model
-    Returns:
-        None: Return exception if error occurs
-    """
-
-    while True:
-        input_xl_path: str = str(input("Path to xlsx:"))
-        if os.path.exists(input_xl_path):
-            break
-    
-    model: Llama = unwrap(load_model(model_path))
-    _ = model  # Prevent unused variable error
-    print("done")
+ft.app(main)

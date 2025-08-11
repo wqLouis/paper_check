@@ -53,4 +53,3 @@ paper_check/
 1. llama_cpp
 2. pandas
 3. openpyxl
-4. flet

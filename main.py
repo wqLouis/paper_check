@@ -12,7 +12,7 @@ def main(page: ft.Page) -> None:
     def register_page(event: ft.ControlEvent) -> None:
         pass
 
-    examine_btn: ft.MenuItemButton = ft.MenuItemButton(content = ft.Text("Examine"), on_click = examine_page) # type: ignore
+    examine_btn: ft.MenuItemButton = ft.MenuItemButton(content = ft.Text("Examine"), on_click = examine_page)
     analysis_btn: ft.MenuItemButton = ft.MenuItemButton(content = ft.Text("Analysis"), on_click = analysis_page)
     register_btn: ft.MenuItemButton = ft.MenuItemButton(content = ft.Text("Register Paper"), on_click = register_page)
 
@@ -23,7 +23,7 @@ def main(page: ft.Page) -> None:
         register_btn],
         expand = True
     )
-    
+
     page.add(ft.Container(content = ft.Row([ft.Text("Paper Check"),menu_bar])))
     page.update()
 

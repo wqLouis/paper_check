@@ -10,7 +10,7 @@ def get_dataframe_from_path(path:str) -> Exception | pd.DataFrame:
     """
     
     try:
-        xlsx_data: pd.DataFrame = pd.read_excel(path, sheet_name = 0)  # type: ignore
+        xlsx_data: pd.DataFrame = pd.read_excel(path, sheet_name = 0)
         return xlsx_data
     except Exception as e:
         return e

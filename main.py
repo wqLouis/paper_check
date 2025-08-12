@@ -17,7 +17,7 @@ def main(page: ft.Page) -> None:
     def register_page(event: ft.ControlEvent) -> None:
         content_area.controls.clear()
 
-        register_input_module: ft.Column = ft.Column()
+        register_input_module: ft.Column = ft.Column(alignment = ft.MainAxisAlignment.CENTER)
 
         dir_path: str = ""
         file_path: list[str] = []
@@ -25,11 +25,17 @@ def main(page: ft.Page) -> None:
         def on_dialog_result(event: ft.FilePickerResultEvent) -> None:
             dir_path = event.path
             file_path = event.files
-        
+
         file_picker: ft.FilePicker = ft.FilePicker(on_result = on_dialog_result)
         file_picker.allowed_extensions = ["pdf", "doc", "docx"]
+        file_picker.allow_multiple = False # Unavaliable at this stage (WIP)
+
         page.overlay.append(file_picker)
+
         upload_dir_btn: ft.ElevatedButton = ft.ElevatedButton(text = "Choose directory...", icon = ft.Icons.FILE_UPLOAD, on_click = lambda _ : file_picker.get_directory_path())
+        selected_path: ft.Text = ft.Text(value = "", size = 12)
+
+        register_input_module.controls.append(selected_path)
         register_input_module.controls.append(ft.Container(content = upload_dir_btn, bgcolor = ft.Colors.SURFACE_CONTAINER_HIGHEST, border_radius = 8, alignment = ft.alignment.center, padding = 8))
 
         def manual_register(event: ft.ControlEvent) -> None:
@@ -37,15 +43,17 @@ def main(page: ft.Page) -> None:
             input_row: list[ft.Control] = [ft.TextField(label = "Year"), ft.TextField(label = "Subject"), ft.TextField(label = "Type")]
             
             if event.data == "false":
-                register_input_module.controls.append(ft.ResponsiveRow(controls = input_row))
-                file_picker.allow_multiple = False # Unavaliable at this stage (WIP)
                 upload_files_btn: ft.ElevatedButton = ft.ElevatedButton(text = "Choose files...", icon = ft.Icons.FILE_UPLOAD, on_click = lambda _: file_picker.pick_files())
+                
+                register_input_module.controls.append(selected_path)
+                register_input_module.controls.append(ft.ResponsiveRow(controls = input_row))
                 register_input_module.controls.append(ft.Container(content = upload_files_btn, bgcolor = ft.Colors.SURFACE_CONTAINER_HIGHEST, border_radius = 8, alignment = ft.alignment.center, padding = 8))
 
             elif event.data == "true":
+                register_input_module.controls.append(selected_path)
                 register_input_module.controls.append(ft.Container(content = upload_dir_btn, bgcolor = ft.Colors.SURFACE_CONTAINER_HIGHEST, border_radius = 8, alignment = ft.alignment.center, padding = 8))
             
-            page.update()
+            register_input_module.update()
 
         discription_text: ft.Text = ft.Text(value = "Register past paper into database system.\n", size = 24, text_align = ft.TextAlign.CENTER)
         mode_select: ft.Switch = ft.Switch(label = "Automatic register by file name\nWith format '[Year]_[Subject]_[Type].word/.pdf'", on_change = manual_register, value = True)
@@ -99,10 +107,27 @@ def main(page: ft.Page) -> None:
 
         page.update()
 
+    def theme_mode_switch(event: ft.ControlEvent) -> None:
+        current_theme_mode = ft.ThemeMode.SYSTEM
+        
+        if theme_mode_btn.icon == ft.Icons.LIGHT_MODE:
+            theme_mode_btn.icon = ft.Icons.DARK_MODE
+            page.theme_mode = ft.ThemeMode.DARK
+            page.update()
+            return
+
+        if theme_mode_btn.icon == ft.Icons.DARK_MODE:
+            theme_mode_btn.icon = ft.Icons.LIGHT_MODE
+            page.theme_mode = ft.ThemeMode.LIGHT
+            page.update()
+            return
+
     examine_btn: ft.MenuItemButton = ft.MenuItemButton(content = ft.Text("Examine"), on_click = examine_page)
     analysis_btn: ft.MenuItemButton = ft.MenuItemButton(content = ft.Text("Analysis"), on_click = analysis_page)
     register_btn: ft.MenuItemButton = ft.MenuItemButton(content = ft.Text("Register Paper"), on_click = register_page)
     settings_btn: ft.IconButton = ft.IconButton(content = ft.Icon(name = ft.Icons.SETTINGS), on_click = settings_page)
+    
+    theme_mode_btn: ft.IconButton = ft.IconButton(icon = ft.Icons.LIGHT_MODE if page.theme_mode == ft.ThemeMode.LIGHT else ft.Icons.DARK_MODE, on_click = theme_mode_switch)
 
     menu_bar: ft.MenuBar = ft.MenuBar(
         controls = [
@@ -112,7 +137,7 @@ def main(page: ft.Page) -> None:
         expand = True
     )
 
-    page.add(ft.Container(content = ft.Row([ft.Text("Paper Check"),menu_bar, settings_btn])), content_area)
+    page.add(ft.Container(content = ft.Row([ft.Text("Paper Check"),menu_bar, settings_btn, theme_mode_btn])), content_area)
     page.update()
 
 ft.app(main)

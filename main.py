@@ -6,7 +6,7 @@ def main(page: ft.Page) -> None:
     page.title = "Paper Check"
     page.theme = ft.Theme(font_family = "Cascadia Code")
 
-    content_area: ft.Column = ft.Column()
+    content_area: ft.Column = ft.Column(alignment = ft.MainAxisAlignment.CENTER)
 
     def examine_page(event: ft.ControlEvent) -> None:
         pass
@@ -17,16 +17,43 @@ def main(page: ft.Page) -> None:
     def register_page(event: ft.ControlEvent) -> None:
         content_area.controls.clear()
 
+        register_input_module: ft.Column = ft.Column()
+
+        dir_path: str = ""
+        file_path: list[str] = []
+
+        def on_dialog_result(event: ft.FilePickerResultEvent) -> None:
+            dir_path = event.path
+            file_path = event.files
+        
+        file_picker: ft.FilePicker = ft.FilePicker(on_result = on_dialog_result)
+        file_picker.allowed_extensions = ["pdf", "doc", "docx"]
+        page.overlay.append(file_picker)
+        upload_dir_btn: ft.ElevatedButton = ft.ElevatedButton(text = "Choose directory...", icon = ft.Icons.FILE_UPLOAD, on_click = lambda _ : file_picker.get_directory_path())
+        register_input_module.controls.append(ft.Container(content = upload_dir_btn, bgcolor = ft.Colors.SURFACE_CONTAINER_HIGHEST, border_radius = 8, alignment = ft.alignment.center, padding = 8))
+
         def manual_register(event: ft.ControlEvent) -> None:
-            pass
+            register_input_module.controls.clear()
+            input_row: list[ft.Control] = [ft.TextField(label = "Year"), ft.TextField(label = "Subject"), ft.TextField(label = "Type")]
+            
+            if event.data == "false":
+                register_input_module.controls.append(ft.ResponsiveRow(controls = input_row))
+                file_picker.allow_multiple = False # Unavaliable at this stage (WIP)
+                upload_files_btn: ft.ElevatedButton = ft.ElevatedButton(text = "Choose files...", icon = ft.Icons.FILE_UPLOAD, on_click = lambda _: file_picker.pick_files())
+                register_input_module.controls.append(ft.Container(content = upload_files_btn, bgcolor = ft.Colors.SURFACE_CONTAINER_HIGHEST, border_radius = 8, alignment = ft.alignment.center, padding = 8))
 
-        discription_text: ft.Text = ft.Text(value = "Register past paper into database system.")
-        mode_select: ft.CupertinoSwitch = ft.CupertinoSwitch(label = "Automatic register by file name", on_change = manual_register)
+            elif event.data == "true":
+                register_input_module.controls.append(ft.Container(content = upload_dir_btn, bgcolor = ft.Colors.SURFACE_CONTAINER_HIGHEST, border_radius = 8, alignment = ft.alignment.center, padding = 8))
+            
+            page.update()
 
-        content_area.controls.append(discription_text)
-        content_area.controls.append(mode_select)
+        discription_text: ft.Text = ft.Text(value = "Register past paper into database system.\n", size = 24, text_align = ft.TextAlign.CENTER)
+        mode_select: ft.Switch = ft.Switch(label = "Automatic register by file name\nWith format '[Year]_[Subject]_[Type].word/.pdf'", on_change = manual_register, value = True)
+        content_area.controls.append(ft.Container(discription_text, expand = True, alignment = ft.alignment.center))
+        content_area.controls.append(ft.Container(mode_select, bgcolor = ft.Colors.SURFACE_CONTAINER_HIGHEST, border_radius = 8, alignment = ft.alignment.center, padding = 8))
+        content_area.controls.append(register_input_module)
 
-        page.update()        
+        page.update()
 
     def settings_page(event: ft.ControlEvent) -> None:
         content_area.controls.clear()

@@ -5,7 +5,7 @@ import sqlite3 as sql
 T = TypeVar("T")
 
 class preference:
-    model_path: str = "./models/Qwen3-Embedding-4B-Q6_K.gguf"
+    model_path: str = "./models"
     pfile_target_path: str = "./db/papers"
     db_path: str = "./db"
 

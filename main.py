@@ -15,7 +15,18 @@ def main(page: ft.Page) -> None:
         pass
 
     def register_page(event: ft.ControlEvent) -> None:
-        pass
+        content_area.controls.clear()
+
+        def manual_register(event: ft.ControlEvent) -> None:
+            pass
+
+        discription_text: ft.Text = ft.Text(value = "Register past paper into database system.")
+        mode_select: ft.CupertinoSwitch = ft.CupertinoSwitch(label = "Automatic register by file name", on_change = manual_register)
+
+        content_area.controls.append(discription_text)
+        content_area.controls.append(mode_select)
+
+        page.update()        
 
     def settings_page(event: ft.ControlEvent) -> None:
         content_area.controls.clear()

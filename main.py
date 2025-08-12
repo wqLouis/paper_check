@@ -25,6 +25,8 @@ def main(page: ft.Page) -> None:
         def on_dialog_result(event: ft.FilePickerResultEvent) -> None:
             dir_path = event.path
             file_path = event.files
+            selected_path.value = "Path:" + (dir_path if dir_path is not None else file_path[0].path if file_path is not None else "")
+            register_input_module.update()
 
         file_picker: ft.FilePicker = ft.FilePicker(on_result = on_dialog_result)
         file_picker.allowed_extensions = ["pdf", "doc", "docx"]
@@ -33,15 +35,16 @@ def main(page: ft.Page) -> None:
         page.overlay.append(file_picker)
 
         upload_dir_btn: ft.ElevatedButton = ft.ElevatedButton(text = "Choose directory...", icon = ft.Icons.FILE_UPLOAD, on_click = lambda _ : file_picker.get_directory_path())
-        selected_path: ft.Text = ft.Text(value = "", size = 12)
+        selected_path: ft.Text = ft.Text(value = "Path:", size = 12)
 
         register_input_module.controls.append(selected_path)
         register_input_module.controls.append(ft.Container(content = upload_dir_btn, bgcolor = ft.Colors.SURFACE_CONTAINER_HIGHEST, border_radius = 8, alignment = ft.alignment.center, padding = 8))
 
         def manual_register(event: ft.ControlEvent) -> None:
             register_input_module.controls.clear()
+            selected_path.value = "Path:"
             input_row: list[ft.Control] = [ft.TextField(label = "Year"), ft.TextField(label = "Subject"), ft.TextField(label = "Type")]
-            
+
             if event.data == "false":
                 upload_files_btn: ft.ElevatedButton = ft.ElevatedButton(text = "Choose files...", icon = ft.Icons.FILE_UPLOAD, on_click = lambda _: file_picker.pick_files())
                 

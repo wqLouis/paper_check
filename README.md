@@ -41,8 +41,10 @@ paper_check/
 ├── db/                    # Database directory
 ├── models/                # Data models
 ├── src/
-│   ├── xlsx_operations.py # Excel file handling
-│   └── unwrap.py          # Text processing utilities
+│   ├── core.py
+│   ├── main_utils.py
+│   ├── register.py
+│   └── xlsx_operations.py
 ├── pyproject.toml         # Project configuration
 ├── uv.lock                # Dependency lockfile
 └── README.md              # Project documentation
@@ -53,3 +55,4 @@ paper_check/
 1. llama_cpp
 2. pandas
 3. openpyxl
+4. flet

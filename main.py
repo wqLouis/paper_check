@@ -86,7 +86,10 @@ def main(page: ft.Page) -> None:
             register_input_module.update()
 
         def submit(event: ft.ControlEvent) -> None:
-            pass
+            if mode_select.value == True:
+                pass
+            else:
+                pass
 
         file_picker: ft.FilePicker = ft.FilePicker(on_result = on_dialog_result)
         file_picker.allowed_extensions = allowed_extensions

@@ -21,28 +21,52 @@ def main(page: ft.Page) -> None:
 
         dir_path: str = ""
         file_path: list[str] = []
+        allowed_extensions: list[str] = [".pdf", ".doc", ".docx"]
 
         def on_dialog_result(event: ft.FilePickerResultEvent) -> None:
             dir_path = event.path
             file_path = event.files
-            selected_path.value = "Path:" + (dir_path if dir_path is not None else file_path[0].path if file_path is not None else "")
+            error_message = ft.Text(value = "")
+            if dir_path is not None and os.path.isdir(dir_path) or file_path is not None and os.path.isfile(file_path[0].path):
+                selected_path.value = (dir_path if dir_path is not None else file_path[0].path if file_path is not None else "")
+                register_input_module.update()
+                if not (file_path is not None and os.path.splitext(file_path[0].path)[1] not in allowed_extensions):
+                    return
+            elif file_path is None and dir_path is None:
+                return
+            else:
+                error_message.value = "Error on opening file:" + (dir_path if dir_path is not None else file_path[0].path if file_path is not None else "")
+            
+            selected_path.value = "Error"
+
+            if file_path is not None and os.path.splitext(file_path[0].path)[1] not in allowed_extensions:
+                error_message.value = f"Invalid file extension, only {str(allowed_extensions)}, but {os.path.splitext(file_path[0].path)[1]}"
+
+            alert_dia = ft.AlertDialog  (
+                                        modal = False,
+                                        title = ft.Text(value = "Error on opening file"),
+                                        content = error_message,
+                                        actions = [ft.TextButton(text = "Ok", on_click = lambda _: page.close(alert_dia))]
+                                        )
+            page.open(alert_dia)
+
             register_input_module.update()
 
         file_picker: ft.FilePicker = ft.FilePicker(on_result = on_dialog_result)
-        file_picker.allowed_extensions = ["pdf", "doc", "docx"]
-        file_picker.allow_multiple = False # Unavaliable at this stage (WIP)
+        file_picker.allowed_extensions = allowed_extensions
+        file_picker.allow_multiple = False # Unavaliable at this stage
 
         page.overlay.append(file_picker)
 
         upload_dir_btn: ft.ElevatedButton = ft.ElevatedButton(text = "Choose directory...", icon = ft.Icons.FILE_UPLOAD, on_click = lambda _ : file_picker.get_directory_path())
-        selected_path: ft.Text = ft.Text(value = "Path:", size = 12)
+        selected_path: ft.Text = ft.Text(value = "", size = 12)
 
         register_input_module.controls.append(selected_path)
         register_input_module.controls.append(ft.Container(content = upload_dir_btn, bgcolor = ft.Colors.SURFACE_CONTAINER_HIGHEST, border_radius = 8, alignment = ft.alignment.center, padding = 8))
 
         def manual_register(event: ft.ControlEvent) -> None:
             register_input_module.controls.clear()
-            selected_path.value = "Path:"
+            selected_path.value = ""
             input_row: list[ft.Control] = [ft.TextField(label = "Year"), ft.TextField(label = "Subject"), ft.TextField(label = "Type")]
 
             if event.data == "false":

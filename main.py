@@ -50,8 +50,14 @@ def main(page: ft.Page) -> None:
                     file_path is not None
                     and os.path.splitext(file_path[0].path)[1] not in allowed_extensions
                 ):
-                    return
-            elif file_path is None and dir_path is None:
+                    auto_fill: register.PastPaper = register.register_extract_format(
+                        selected_path.value
+                    )
+                    if auto_fill.pfile_path == "":
+                        return
+                    input_row[0].value = str(auto_fill.pyear)
+                    input_row[1].value = auto_fill.psbj
+                    input_row[2].value = auto_fill.ptype
                 return
             else:
                 error_message.value = "Error on opening file:" + (
@@ -73,7 +79,8 @@ def main(page: ft.Page) -> None:
                 title=ft.Text(value="Error on opening file"),
                 content=error_message,
                 actions=[
-                    ft.TextButton(text="Ok", on_click=lambda _: page.close(alert_dia))
+                    ft.TextButton(
+                        text="Ok", on_click=lambda _: page.close(alert_dia))
                 ],
             )
             page.open(alert_dia)
@@ -153,7 +160,11 @@ def main(page: ft.Page) -> None:
             if mode_select.value == True:
                 path: str = unwrap_str(selected_path.value)
 
-                unwrap(register.auto_register_with_folder(path=path, log=log_text, update_control=content_area))
+                unwrap(
+                    register.auto_register_with_folder(
+                        path=path, log=log_text, update_control=content_area
+                    )
+                )
             else:
                 path: str = unwrap_str(selected_path.value)
 
@@ -180,7 +191,11 @@ def main(page: ft.Page) -> None:
         )
         selected_path: ft.Text = ft.Text(value="", size=12)
 
-        register_input_module.controls.append(ft.Container(content=selected_path, width=page.width, alignment=ft.alignment.center))
+        register_input_module.controls.append(
+            ft.Container(
+                content=selected_path, width=page.width, alignment=ft.alignment.center
+            )
+        )
         register_input_module.controls.append(
             ft.ResponsiveRow(
                 controls=[
@@ -216,7 +231,8 @@ def main(page: ft.Page) -> None:
         log_text: ft.Text = ft.Text(value="Log:\n", size=16)
 
         content_area.controls.append(
-            ft.Container(discription_text, expand=True, alignment=ft.alignment.center)
+            ft.Container(discription_text, expand=True,
+                         alignment=ft.alignment.center)
         )
         content_area.controls.append(
             ft.Container(
@@ -236,7 +252,7 @@ def main(page: ft.Page) -> None:
                 margin=32,
                 padding=32,
                 border_radius=32,
-                width=page.width
+                width=page.width,
             )
         )
 
@@ -269,7 +285,8 @@ def main(page: ft.Page) -> None:
                 status_text.value = "Error on save"
 
             if os.path.isdir(unwrap_str(pfile_path_target.value)):
-                preference.pfile_target_path = unwrap_str(pfile_path_target.value)
+                preference.pfile_target_path = unwrap_str(
+                    pfile_path_target.value)
             else:
                 pfile_path_target.error_text = "Invalid directory"
                 status_text.value = "Error on save"
@@ -279,18 +296,31 @@ def main(page: ft.Page) -> None:
             else:
                 db_path.error_text = "Invalid directory"
                 status_text.value = "Error on save"
+                page.update()
+                return
 
-            page.update()
+            page.open(ft.AlertDialog(modal=False, title=status_text))
 
-        save_btn: ft.ElevatedButton = ft.ElevatedButton(
-            text="Save", icon=ft.Icons.SAVE, on_click=save_preference
+        save_btn: ft.IconButton = ft.IconButton(
+            icon=ft.Icons.SAVE,
+            icon_size=32,
+            padding=8,
+            bgcolor=ft.Colors.SURFACE_CONTAINER_HIGHEST,
+            on_click=save_preference,
         )
         status_text: ft.Text = ft.Text(value="", size=16)
 
         content_area.controls.append(model_path)
         content_area.controls.append(pfile_path_target)
         content_area.controls.append(db_path)
-        content_area.controls.append(ft.Row(controls=[save_btn, status_text]))
+        content_area.controls.append(
+            ft.Container(
+                content=save_btn,
+                width=page.width,
+                alignment=ft.alignment.center_right,
+                margin=ft.margin.symmetric(horizontal=32),
+            )
+        )
 
         page.update()
 
@@ -337,7 +367,8 @@ def main(page: ft.Page) -> None:
     page.add(
         ft.Container(
             content=ft.Row(
-                [ft.Text("Paper Check"), menu_bar, settings_btn, theme_mode_btn]
+                [ft.Text("Paper Check"), menu_bar,
+                 settings_btn, theme_mode_btn]
             )
         ),
         content_area,

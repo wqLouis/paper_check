@@ -12,7 +12,7 @@ from src.core import pattributes
 
 
 class PastPaper:
-    pfile_path: str
+    pfile_path: str = ""
     pyear: int
     psbj: str
     ptype: str
@@ -112,3 +112,24 @@ def auto_register_with_folder(path: str, log: ft.Text, update_control: ft.Contro
         unwrap(register_papers(pfile_path = past_paper.pfile_path, pyear = past_paper.pyear, psbj = past_paper.psbj, ptype = past_paper.ptype))
         log.value += f"> Registered: '{past_paper.pfile_path}'\n"
         update_control.update()
+
+def register_extract_format(file: str) -> PastPaper:
+    """
+        Extracts parameters for registration
+
+        Args:
+            file: file name
+        
+        Returns:
+            A list of checked parameters
+    """
+
+    para: list[str] = os.path.splitext(os.path.basename(file))[0].split(sep="_")
+    past_paper: PastPaper = PastPaper()
+
+    if para[0].isdigit() and para[1] in pattributes.sbjs and para[2] in pattributes.types:
+        past_paper.pyear = int(para[0])
+        past_paper.psbj = para[1]
+        past_paper.ptype = para[2]
+    
+    return past_paper

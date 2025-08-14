@@ -1,12 +1,14 @@
 import os
+import stat
 import glob
 import shutil
 import sqlite3 as sql
 import flet as ft
-from core import init_db
-from core import unwrap
-from core import preference
-from core import pattributes
+from src.core import init_db
+from src.core import unwrap
+from src.core import unwrap_str
+from src.core import preference
+from src.core import pattributes
 
 
 class PastPaper:
@@ -52,7 +54,7 @@ def register_papers(pfile_path: str, pyear: int, psbj: str, ptype: str) -> Excep
     cur: sql.Cursor = con.cursor()
 
     try:
-        shutil.copyfile(pfile_path, preference.pfile_target_path)
+        shutil.copyfile(pfile_path, f"{preference.pfile_target_path}/{os.path.basename(pfile_path)}")
     except Exception as e:
         return e
 
@@ -69,29 +71,30 @@ def register_papers(pfile_path: str, pyear: int, psbj: str, ptype: str) -> Excep
     return
 
 
-def auto_register_with_folder(path: str, log: ft.Text) -> None | Exception:
+def auto_register_with_folder(path: str, log: ft.Text, update_control: ft.Control) -> Exception | None:
     """
     Automatically register past papers into db
 
     Args:
         path: Path to folder
         log: flet text control element for logging
-        
+
     Returns:
         None
     """
+    log.value = unwrap_str(log.value)
 
-    file_list: list[str] = glob.glob(path + "/*.{pdf,doc,docx}")
-    unmatch_list: list[str] = []
+    file_list: list[str] = glob.glob(path + "\\*.pdf") + glob.glob(path + "\\*.doc") + glob.glob(path + "\\*.docx")
+    unmatch_list: list[str] = [] # currently unused
     matched_list: list[PastPaper] = []
 
     if not os.path.isdir(path):
         return FileNotFoundError(f"Cannot find directory: '{path}'")
 
     for file in file_list:
-        para: list[str] = file.split(sep="_", maxsplit=3)
+        para: list[str] = os.path.splitext(os.path.basename(file))[0].split(sep="_")
         past_paper: PastPaper = PastPaper()
-        past_paper.pfile_path = path
+        past_paper.pfile_path = file
 
         if para[0].isdigit() and para[1] in pattributes.sbjs and para[2] in pattributes.types:
             past_paper.pyear = int(para[0])
@@ -99,5 +102,13 @@ def auto_register_with_folder(path: str, log: ft.Text) -> None | Exception:
             past_paper.ptype = para[2]
         else:
             unmatch_list.append(file)
+            log.value += f"> Failed to register file: '{file}'\n"
+            update_control.update()
             continue
-            
+        
+        matched_list.append(past_paper)
+    
+    for past_paper in matched_list:
+        unwrap(register_papers(pfile_path = past_paper.pfile_path, pyear = past_paper.pyear, psbj = past_paper.psbj, ptype = past_paper.ptype))
+        log.value += f"> Registered: '{past_paper.pfile_path}'\n"
+        update_control.update()

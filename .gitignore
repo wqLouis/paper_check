@@ -12,3 +12,7 @@ storage
 
 # Embeddings models
 models/*
+
+# Others
+testing
+db/*

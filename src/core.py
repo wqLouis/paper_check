@@ -1,6 +1,7 @@
 from typing import TypeVar
 import os
 import sqlite3 as sql
+import flet as ft
 
 T = TypeVar("T")
 
@@ -28,7 +29,7 @@ def unwrap(value: T | Exception) -> T:
         the value itself
     """
     if isinstance(value, Exception):
-        raise value # Do error handling here
+        raise value
     else:
         return value
     
@@ -84,3 +85,15 @@ def init_db() -> Exception | sql.Connection:
         return con
     except Exception as e:
         return e
+
+def unwrap_str(String: str | None) -> str:
+    """
+    Takes in var with type str or None and return only str
+
+    Args:
+        String: Input str
+    Returns:
+        If String is None then returns "" else return String itself
+    """
+
+    return String if String is not None else ""

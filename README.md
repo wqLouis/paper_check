@@ -11,7 +11,7 @@ This project is designed to analyze academic examination papers for textual simi
 ### Features
 
 - Excel file input/output support (WIP)
-- Text similarity analysis
+- Text similarity analysis (WIP)
 
 ### Installation
 
@@ -31,7 +31,11 @@ uv pip install -e .
 
 ### Usage
 
-WIP
+```bash
+flet run ./main.py
+```
+
+You need to register past papers in the register tab for further analysis.
 
 ### Project Structure
 

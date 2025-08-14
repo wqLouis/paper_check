@@ -4,6 +4,7 @@ import glob
 import src.core as core
 import src.register as register
 from src.core import unwrap
+from src.core import unwrap_str
 from src.core import preference
 
 
@@ -72,22 +73,22 @@ def main(page: ft.Page) -> None:
                 title=ft.Text(value="Error on opening file"),
                 content=error_message,
                 actions=[
-                    ft.TextButton(
-                        text="Ok", on_click=lambda _: page.close(alert_dia))
+                    ft.TextButton(text="Ok", on_click=lambda _: page.close(alert_dia))
                 ],
             )
             page.open(alert_dia)
 
             register_input_module.update()
 
+        input_row: list[ft.TextField] = [
+            ft.TextField(label="Year"),
+            ft.TextField(label="Subject"),
+            ft.TextField(label="Type"),
+        ]
+
         def manual_register(event: ft.ControlEvent) -> None:
             register_input_module.controls.clear()
             selected_path.value = ""
-            input_row: list[ft.Control] = [
-                ft.TextField(label="Year"),
-                ft.TextField(label="Subject"),
-                ft.TextField(label="Type"),
-            ]
 
             if event.data == "false":
                 upload_files_btn: ft.ElevatedButton = ft.ElevatedButton(
@@ -150,15 +151,18 @@ def main(page: ft.Page) -> None:
 
         def submit(event: ft.ControlEvent) -> None:
             if mode_select.value == True:
-                path: str = (
-                    selected_path.value
-                    if selected_path.value is not None and selected_path is not "Error"
-                    else ""
-                )
+                path: str = unwrap_str(selected_path.value)
 
-                unwrap(register.auto_register_with_folder(path = path, log = ft.Text()))
+                unwrap(register.auto_register_with_folder(path=path, log=log_text, update_control=content_area))
             else:
-                pass
+                path: str = unwrap_str(selected_path.value)
+
+                register.register_papers(
+                    pfile_path=path,
+                    pyear=int(unwrap_str(input_row[0].value)),
+                    psbj=unwrap_str(input_row[1].value),
+                    ptype=unwrap_str(input_row[2].value),
+                )
 
         file_picker: ft.FilePicker = ft.FilePicker(on_result=on_dialog_result)
         file_picker.allowed_extensions = allowed_extensions
@@ -176,7 +180,7 @@ def main(page: ft.Page) -> None:
         )
         selected_path: ft.Text = ft.Text(value="", size=12)
 
-        register_input_module.controls.append(selected_path)
+        register_input_module.controls.append(ft.Container(content=selected_path, width=page.width, alignment=ft.alignment.center))
         register_input_module.controls.append(
             ft.ResponsiveRow(
                 controls=[
@@ -205,13 +209,14 @@ def main(page: ft.Page) -> None:
             text_align=ft.TextAlign.CENTER,
         )
         mode_select: ft.Switch = ft.Switch(
-            label="Automatic register by file name\nWith format '[Year]_[Subject]_[Type].word/.pdf'",
+            label="Automatic register by file name\nWith format '[Year]_[Subject]_[Type].doc/.pdf/.docx'",
             on_change=manual_register,
             value=True,
         )
+        log_text: ft.Text = ft.Text(value="Log:\n", size=16)
+
         content_area.controls.append(
-            ft.Container(discription_text, expand=True,
-                         alignment=ft.alignment.center)
+            ft.Container(discription_text, expand=True, alignment=ft.alignment.center)
         )
         content_area.controls.append(
             ft.Container(
@@ -224,6 +229,16 @@ def main(page: ft.Page) -> None:
             )
         )
         content_area.controls.append(register_input_module)
+        content_area.controls.append(
+            ft.Container(
+                log_text,
+                bgcolor=ft.Colors.SURFACE_CONTAINER_HIGHEST,
+                margin=32,
+                padding=32,
+                border_radius=32,
+                width=page.width
+            )
+        )
 
         page.update()
 
@@ -247,26 +262,20 @@ def main(page: ft.Page) -> None:
             status_text.value = "Saved!"
 
             # Check value is valid
-            if os.path.isdir(model_path.value if model_path.value != None else ""):
-                preference.model_path = (
-                    model_path.value if model_path.value != None else ""
-                )
+            if os.path.isdir(unwrap_str(model_path.value)):
+                preference.model_path = unwrap_str(model_path.value)
             else:
                 model_path.error_text = "Invalid file path"
                 status_text.value = "Error on save"
 
-            if os.path.isdir(
-                pfile_path_target.value if pfile_path_target.value != None else ""
-            ):
-                preference.pfile_target_path = (
-                    pfile_path_target.value if pfile_path_target.value != None else ""
-                )
+            if os.path.isdir(unwrap_str(pfile_path_target.value)):
+                preference.pfile_target_path = unwrap_str(pfile_path_target.value)
             else:
                 pfile_path_target.error_text = "Invalid directory"
                 status_text.value = "Error on save"
 
-            if os.path.isdir(db_path.value if db_path.value != None else ""):
-                preference.db_path = db_path.value if db_path.value != None else ""
+            if os.path.isdir(unwrap_str(db_path.value)):
+                preference.db_path = unwrap_str(db_path.value)
             else:
                 db_path.error_text = "Invalid directory"
                 status_text.value = "Error on save"
@@ -286,7 +295,6 @@ def main(page: ft.Page) -> None:
         page.update()
 
     def theme_mode_switch(event: ft.ControlEvent) -> None:
-        current_theme_mode = ft.ThemeMode.SYSTEM
 
         if theme_mode_btn.icon == ft.Icons.LIGHT_MODE:
             theme_mode_btn.icon = ft.Icons.DARK_MODE
@@ -329,8 +337,7 @@ def main(page: ft.Page) -> None:
     page.add(
         ft.Container(
             content=ft.Row(
-                [ft.Text("Paper Check"), menu_bar,
-                 settings_btn, theme_mode_btn]
+                [ft.Text("Paper Check"), menu_bar, settings_btn, theme_mode_btn]
             )
         ),
         content_area,

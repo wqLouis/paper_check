@@ -4,6 +4,7 @@ import glob
 import shutil
 import sqlite3 as sql
 import flet as ft
+import hashlib
 from src.core import init_db
 from src.core import unwrap
 from src.core import unwrap_str
@@ -18,7 +19,7 @@ class PastPaper:
     ptype: str
 
 
-def register_papers(pfile_path: str, pyear: int, psbj: str, ptype: str) -> Exception | None:
+def register_papers(pfile_path: str, pyear: int, psbj: str, ptype: str) -> Exception | str:
 
     """
     (Plan to refactor: replacing args into a list of PastPaper class)
@@ -49,26 +50,39 @@ def register_papers(pfile_path: str, pyear: int, psbj: str, ptype: str) -> Excep
     con: sql.Connection = unwrap(init_db())
     insert_query: str = """
     INSERT INTO psource (pfile_path, pyear, psbj, ptype)
-    VALUES (?, ?, ?, ?)
+    VALUES (?, ?, ?, ?);
+    """
+    check_exist_query: str = """
+    SELECT EXISTS(
+        SELECT 1 FROM psource
+        WHERE pfile_path = (?)
+    );
     """
     cur: sql.Cursor = con.cursor()
 
+    new_file_name: tuple[str, str] = os.path.splitext(os.path.basename(pfile_path))
+    with open(file=pfile_path, mode="rb") as f:
+        md5sum: str = hashlib.md5(f.read()).hexdigest()
+
     try:
-        shutil.copyfile(pfile_path, f"{preference.pfile_target_path}/{os.path.basename(pfile_path)}")
+        shutil.copyfile(pfile_path, f"{preference.pfile_target_path}/{new_file_name[0]+"_"+md5sum+new_file_name[1]}")
     except Exception as e:
         return e
 
-    cur.execute(
-        insert_query,
-        (
-            preference.pfile_target_path + os.path.basename(pfile_path),
-            pyear,
-            psbj,
-            ptype,
-        ),
-    )
-    con.commit()
-    return
+    if cur.execute(check_exist_query, (f"{preference.pfile_target_path}/{new_file_name[0]+"_"+md5sum+new_file_name[1]}",)).fetchone()[0] != 1:
+        cur.execute(
+            insert_query,
+            (
+                f"{preference.pfile_target_path}/{new_file_name[0]+"_"+md5sum+new_file_name[1]}",
+                pyear,
+                psbj,
+                ptype,
+            ),
+        )
+        con.commit()
+    else:
+        return f"{preference.pfile_target_path}/{new_file_name[0]+"_"+md5sum+new_file_name[1]} already exists\n"
+    return ""
 
 
 def auto_register_with_folder(path: str, log: ft.Text, update_control: ft.Control) -> Exception | None:
@@ -109,8 +123,11 @@ def auto_register_with_folder(path: str, log: ft.Text, update_control: ft.Contro
         matched_list.append(past_paper)
     
     for past_paper in matched_list:
-        unwrap(register_papers(pfile_path = past_paper.pfile_path, pyear = past_paper.pyear, psbj = past_paper.psbj, ptype = past_paper.ptype))
-        log.value += f"> Registered: '{past_paper.pfile_path}'\n"
+        result: str = unwrap(register_papers(pfile_path = past_paper.pfile_path, pyear = past_paper.pyear, psbj = past_paper.psbj, ptype = past_paper.ptype))
+        if result == "":
+            log.value += f"> Registered: '{past_paper.pfile_path}'\n"
+        else:
+            log.value += f"> {result}"
         update_control.update()
 
 def register_extract_format(file: str) -> PastPaper:

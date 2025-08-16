@@ -15,7 +15,8 @@ def main(page: ft.Page) -> None:
     content_area: ft.Column = ft.Column(alignment=ft.MainAxisAlignment.CENTER)
 
     def examine_page(event: ft.ControlEvent) -> None:
-        pass
+        content_area.controls.clear()
+        page.update()
 
     def analysis_page(event: ft.ControlEvent) -> None:
         pass
@@ -261,43 +262,18 @@ def main(page: ft.Page) -> None:
     def settings_page(event: ft.ControlEvent) -> None:
         content_area.controls.clear()
 
-        model_path: ft.TextField = ft.TextField(
-            label="Embedding model path", value=preference.model_path
-        )
-        pfile_path_target: ft.TextField = ft.TextField(
-            label="Past paper location", value=preference.pfile_target_path
-        )
-        db_path: ft.TextField = ft.TextField(
-            label="Past paper database path", value=preference.db_path
-        )
+        preference_class: preference = preference()
+        input_module: list[ft.TextField] = preference_class.construct_textfield()
+        content_area.controls += input_module
 
         def save_preference(event: ft.ControlEvent) -> None:
-            model_path.error_text = ""
-            pfile_path_target.error_text = ""
-
             status_text.value = "Saved!"
-
-            # Check value is valid
-            if os.path.isdir(unwrap_str(model_path.value)):
-                preference.model_path = unwrap_str(model_path.value)
-            else:
-                model_path.error_text = "Invalid file path"
-                status_text.value = "Error on save"
-
-            if os.path.isdir(unwrap_str(pfile_path_target.value)):
-                preference.pfile_target_path = unwrap_str(
-                    pfile_path_target.value)
-            else:
-                pfile_path_target.error_text = "Invalid directory"
-                status_text.value = "Error on save"
-
-            if os.path.isdir(unwrap_str(db_path.value)):
-                preference.db_path = unwrap_str(db_path.value)
-            else:
-                db_path.error_text = "Invalid directory"
-                status_text.value = "Error on save"
-                page.update()
-                return
+            for i in input_module:
+                if preference_class.check_dir_valid(text_field=i, page=page) == False:
+                    status_text.value = "Error on save"
+            
+            if unwrap_str(status_text.value) == "Saved!":
+                preference_class.save_on_disk()
 
             page.open(ft.AlertDialog(modal=False, title=status_text))
 
@@ -310,9 +286,6 @@ def main(page: ft.Page) -> None:
         )
         status_text: ft.Text = ft.Text(value="", size=16)
 
-        content_area.controls.append(model_path)
-        content_area.controls.append(pfile_path_target)
-        content_area.controls.append(db_path)
         content_area.controls.append(
             ft.Container(
                 content=save_btn,

@@ -1,14 +1,57 @@
 from typing import TypeVar
 import os
-import sqlite3 as sql
 import flet as ft
+import sqlite3 as sql
+import json
+
 
 T = TypeVar("T")
 
 class preference:
+
     model_path: str = "./models"
     pfile_target_path: str = "./db/papers"
     db_path: str = "./db"
+    ocr_model: str = "./models/ocr/"
+
+    setting_dict: dict = { # Will be used to replace original preference
+        "model_path" : "./models",
+        "pfile_target_path" : "./db/papers",
+        "db_path" : "./db",
+        "ocr_path" : "./models/ocr",
+        "preference_path" : "./preference"
+    }
+
+    def check_dir_valid(self, text_field: ft.TextField, page: ft.Page) -> bool:
+        if text_field.value is None:
+            return False
+        
+        if os.path.isdir(unwrap_str(text_field.value)):
+            try:
+                self.setting_dict[text_field.label] = unwrap_str(text_field.value)
+                text_field.error_text = None
+            except KeyError:
+                return False
+            return True
+        else:
+            text_field.error_text = "Invalid directory"
+            page.update()
+            return False
+
+    def construct_textfield(self) -> list[ft.TextField]:
+        result: list[ft.TextField] = []
+
+        for key in self.setting_dict:
+            result.append(
+                ft.TextField(label=key, value=self.setting_dict[key], read_only=True if key == "preference_path" else False)
+            )
+        
+        return result
+    
+    def save_on_disk(self):
+        with open(f"{self.setting_dict["preference_path"]}/preference.json", mode="w") as f:
+            json.dump(self.setting_dict, f, indent=4)
+
 
 class pattributes:
     """
@@ -97,3 +140,15 @@ def unwrap_str(String: str | None) -> str:
     """
 
     return String if String is not None else ""
+
+def sync_preference() -> None:
+    preference.model_path = preference.setting_dict["model_path"]
+    preference.pfile_target_path = preference.setting_dict["pfile_target_path"]
+    preference.db_path = preference.setting_dict["db_path"]
+    preference.ocr_model = preference.setting_dict["ocr_path"]
+
+# load and sync preference
+if os.path.exists(f"{preference.setting_dict["preference_path"]}/preference.json"):
+    with open(f"{preference.setting_dict["preference_path"]}/preference.json", mode="r") as f:
+        preference.setting_dict = json.load(f)
+    sync_preference()

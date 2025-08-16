@@ -1,9 +1,12 @@
 import rapidocr
 import numpy as np
+import flet as ft
 from pdf2image import convert_from_path
 from PIL import Image
+from src.core import preference
 
-def pdf_ocr(path: str) -> list[str]:
+
+def pdf_ocr(path: str, page_progress_bar: ft.ProgressBar, page: ft.Page) -> list[str]:
     """
         perform ocr with file
 
@@ -18,6 +21,10 @@ def pdf_ocr(path: str) -> list[str]:
 
     engine: rapidocr.RapidOCR = rapidocr.RapidOCR()
 
-    for page in pdf:
-        text += list(engine(img_content=np.array(page)).txts) # type: ignore
+    page_count: int = len(pdf)
+
+    for (i, pdf_page) in enumerate(pdf):
+        page_progress_bar.value = float(i) / float(page_count)
+        ocr_result = engine(img_content=np.array(pdf_page), use_det=False, use_cls=False, use_rec=True)
+        text += list(ocr_result.txts) # type: ignore
     return text

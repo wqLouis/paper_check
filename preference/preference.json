@@ -1,0 +1,7 @@
+{
+    "model_path": "./models",
+    "pfile_target_path": "./db/papers",
+    "db_path": "./db",
+    "ocr_path": "./models/ocr",
+    "preference_path": "./preference"
+}

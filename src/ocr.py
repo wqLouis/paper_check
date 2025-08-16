@@ -8,12 +8,12 @@ from src.core import preference
 
 def pdf_ocr(path: str, page_progress_bar: ft.ProgressBar, page: ft.Page) -> list[str]:
     """
-        perform ocr with file
+    perform ocr with file
 
-        Args:
-            path: Path to PDF
-        Returns:
-            A list of string
+    Args:
+        path: Path to PDF
+    Returns:
+        A list of string
     """
 
     pdf: list[Image.Image] = convert_from_path(pdf_path=path)
@@ -23,8 +23,10 @@ def pdf_ocr(path: str, page_progress_bar: ft.ProgressBar, page: ft.Page) -> list
 
     page_count: int = len(pdf)
 
-    for (i, pdf_page) in enumerate(pdf):
+    for i, pdf_page in enumerate(pdf):
         page_progress_bar.value = float(i) / float(page_count)
-        ocr_result = engine(img_content=np.array(pdf_page), use_det=False, use_cls=False, use_rec=True)
-        text += list(ocr_result.txts) # type: ignore
+        ocr_result = engine(
+            img_content=np.array(pdf_page), use_det=False, use_cls=False, use_rec=True
+        )
+        text += list(ocr_result.txts)  # type: ignore
     return text

@@ -7,6 +7,7 @@ import json
 
 T = TypeVar("T")
 
+
 class preference:
 
     model_path: str = "./models"
@@ -14,21 +15,23 @@ class preference:
     db_path: str = "./db"
     ocr_model: str = "./models/ocr/"
 
-    setting_dict: dict = { # Will be used to replace original preference
-        "model_path" : "./models",
-        "pfile_target_path" : "./db/papers",
-        "db_path" : "./db",
-        "ocr_path" : "./models/ocr",
-        "preference_path" : "./preference"
+    setting_dict: dict = {  # Will be used to replace original preference
+        "model_path": "./models",
+        "pfile_target_path": "./db/papers",
+        "db_path": "./db",
+        "ocr_path": "./models/ocr",
+        "temp_path": "./db/temp",
+        "preference_path": "./preference",
     }
 
     def check_dir_valid(self, text_field: ft.TextField, page: ft.Page) -> bool:
         if text_field.value is None:
             return False
-        
+
         if os.path.isdir(unwrap_str(text_field.value)):
             try:
-                self.setting_dict[text_field.label] = unwrap_str(text_field.value)
+                self.setting_dict[text_field.label] = unwrap_str(
+                    text_field.value)
                 text_field.error_text = None
             except KeyError:
                 return False
@@ -43,13 +46,19 @@ class preference:
 
         for key in self.setting_dict:
             result.append(
-                ft.TextField(label=key, value=self.setting_dict[key], read_only=True if key == "preference_path" else False)
+                ft.TextField(
+                    label=key,
+                    value=self.setting_dict[key],
+                    read_only=True if key == "preference_path" else False,
+                )
             )
-        
+
         return result
-    
+
     def save_on_disk(self):
-        with open(f"{self.setting_dict["preference_path"]}/preference.json", mode="w") as f:
+        with open(
+            f"{self.setting_dict["preference_path"]}/preference.json", mode="w"
+        ) as f:
             json.dump(self.setting_dict, f, indent=4)
 
 
@@ -57,8 +66,10 @@ class pattributes:
     """
     types available for past papers
     """
-    types:set[str] = set(["DSE", "ALV", "CE"])
-    sbjs:set[str] = set(["MATH", "PHY", "CHEM", "BIO", "ICT"])
+
+    types: set[str] = set(["DSE", "ALV", "CE", "OTHERS"])
+    sbjs: set[str] = set(["MATH", "PHY", "CHEM", "BIO", "ICT", "OTHERS"])
+
 
 def unwrap(value: T | Exception) -> T:
     """
@@ -67,7 +78,7 @@ def unwrap(value: T | Exception) -> T:
     Args:
         value:
             return variable of the function
-    
+
     Returns:
         the value itself
     """
@@ -75,18 +86,19 @@ def unwrap(value: T | Exception) -> T:
         raise value
     else:
         return value
-    
+
+
 def init_db() -> Exception | sql.Connection:
     """
     Initialize sqlite database with basic structures
     """
-    
+
     if not os.path.exists(preference.db_path):
         try:
             os.mkdir(preference.db_path)
         except Exception as e:
             return e
-    
+
     if not os.path.exists(preference.pfile_target_path):
         try:
             os.mkdir(preference.db_path)
@@ -96,12 +108,16 @@ def init_db() -> Exception | sql.Connection:
     con: sql.Connection = sql.connect(preference.db_path + "/past_papers.db")
     cur: sql.Cursor = con.cursor()
 
-    table_count:int = int(cur.execute("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table';").fetchone()[0])
+    table_count: int = int(
+        cur.execute(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table';"
+        ).fetchone()[0]
+    )
     if table_count > 0:
         return con
     try:
         cur.execute(
-        """
+            """
         CREATE TABLE psource(
             pid INTEGER PRIMARY KEY AUTOINCREMENT,
             pfile_path TEXT NOT NULL,
@@ -112,7 +128,7 @@ def init_db() -> Exception | sql.Connection:
         """
         )
         cur.execute(
-        """
+            """
         CREATE TABLE qsource(
             qid INTEGER PRIMARY KEY AUTOINCREMENT,
             qstr TEXT NOT NULL,
@@ -122,12 +138,13 @@ def init_db() -> Exception | sql.Connection:
         );
         """
         )
-        
+
         con.commit()
 
         return con
     except Exception as e:
         return e
+
 
 def unwrap_str(String: str | None) -> str:
     """
@@ -141,14 +158,18 @@ def unwrap_str(String: str | None) -> str:
 
     return String if String is not None else ""
 
+
 def sync_preference() -> None:
     preference.model_path = preference.setting_dict["model_path"]
     preference.pfile_target_path = preference.setting_dict["pfile_target_path"]
     preference.db_path = preference.setting_dict["db_path"]
     preference.ocr_model = preference.setting_dict["ocr_path"]
 
+
 # load and sync preference
 if os.path.exists(f"{preference.setting_dict["preference_path"]}/preference.json"):
-    with open(f"{preference.setting_dict["preference_path"]}/preference.json", mode="r") as f:
+    with open(
+        f"{preference.setting_dict["preference_path"]}/preference.json", mode="r"
+    ) as f:
         preference.setting_dict = json.load(f)
     sync_preference()

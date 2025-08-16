@@ -12,7 +12,7 @@ def main(page: ft.Page) -> None:
     page.title = "Paper Check"
     page.theme = ft.Theme(font_family="Cascadia Code")
 
-    content_area: ft.Column = ft.Column(alignment=ft.MainAxisAlignment.CENTER)
+    content_area: ft.Column = ft.Column(alignment=ft.MainAxisAlignment.CENTER, scroll=ft.ScrollMode.AUTO)
 
     def examine_page(event: ft.ControlEvent) -> None:
         content_area.controls.clear()
@@ -271,7 +271,7 @@ def main(page: ft.Page) -> None:
             for i in input_module:
                 if preference_class.check_dir_valid(text_field=i, page=page) == False:
                     status_text.value = "Error on save"
-            
+
             if unwrap_str(status_text.value) == "Saved!":
                 preference_class.save_on_disk()
 
@@ -296,6 +296,17 @@ def main(page: ft.Page) -> None:
         )
 
         page.update()
+
+    def preprocess_page(event: ft.ControlEvent) -> None:
+        content_area.controls.clear()
+
+        past_paper_table: ft.DataTable = ft.DataTable(columns=[
+            ft.DataColumn(label=ft.Text(value="Select")),
+            ft.DataColumn(label=ft.Text(value="Year")),
+            ft.DataColumn(label=ft.Text(value="Subject")),
+            ft.DataColumn(label=ft.Text(value="Type")),
+            ft.DataColumn(label=ft.Text(value="Note"))
+        ])
 
     def theme_mode_switch(event: ft.ControlEvent) -> None:
 
@@ -323,6 +334,9 @@ def main(page: ft.Page) -> None:
     settings_btn: ft.IconButton = ft.IconButton(
         content=ft.Icon(name=ft.Icons.SETTINGS), on_click=settings_page
     )
+    preprocess_btn: ft.MenuItemButton = ft.MenuItemButton(
+        content=ft.Text("Preprocess"), on_click=preprocess_page
+    )
 
     theme_mode_btn: ft.IconButton = ft.IconButton(
         icon=(
@@ -334,7 +348,7 @@ def main(page: ft.Page) -> None:
     )
 
     menu_bar: ft.MenuBar = ft.MenuBar(
-        controls=[examine_btn, analysis_btn, register_btn], expand=True
+        controls=[examine_btn, analysis_btn, register_btn, preprocess_btn], expand=True
     )
 
     page.add(

@@ -98,7 +98,7 @@ def auto_register_with_folder(path: str, log: ft.Text, update_control: ft.Contro
     """
     log.value = unwrap_str(log.value)
 
-    file_list: list[str] = glob.glob(path + "\\*.pdf") + glob.glob(path + "\\*.doc") + glob.glob(path + "\\*.docx")
+    file_list: list[str] = glob.glob(path + "\\*.pdf") + glob.glob(path + "\\*.docx")
     unmatch_list: list[str] = [] # currently unused
     matched_list: list[PastPaper] = []
 

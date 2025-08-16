@@ -56,7 +56,8 @@ paper_check/
 
 ### Dependencies
 
-1. llama_cpp
-2. pandas
-3. openpyxl
-4. flet
+1. [llama_cpp](https://github.com/abetlen/llama-cpp-python)
+2. [openpyxl](https://github.com/openpyxl/openpyxl)
+3. [flet](https://github.com/flet-dev/flet)
+4. [rapidocr](https://github.com/RapidAI/RapidOCR)
+5. [PyMuPDF](https://github.com/pymupdf/PyMuPDF)

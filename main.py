@@ -27,7 +27,7 @@ def main(page: ft.Page) -> None:
             alignment=ft.MainAxisAlignment.CENTER
         )
 
-        allowed_extensions: list[str] = [".pdf", ".doc", ".docx"]
+        allowed_extensions: list[str] = [".pdf", ".docx"]
 
         def on_dialog_result(event: ft.FilePickerResultEvent) -> None:
             dir_path = event.path
@@ -224,7 +224,7 @@ def main(page: ft.Page) -> None:
             text_align=ft.TextAlign.CENTER,
         )
         mode_select: ft.Switch = ft.Switch(
-            label="Automatic register by file name\nWith format '[Year]_[Subject]_[Type].doc/.pdf/.docx'",
+            label="Automatic register by file name\nWith format '[Year]_[Subject]_[Type].pdf/.docx'",
             on_change=manual_register,
             value=True,
         )

@@ -10,7 +10,7 @@ This project is designed to analyze academic examination papers for textual simi
 
 ### Features
 
-- Excel file input/output support (WIP)
+- PDF file input (WIP)
 - Text similarity analysis (WIP)
 
 ### Installation
@@ -35,7 +35,9 @@ uv pip install -e .
 flet run ./main.py
 ```
 
-You need to register past papers in the register tab for further analysis.
+Before you analysis:
+Register paper -> OCR and preprocess -> Examine
+
 
 ### Project Structure
 
@@ -53,11 +55,3 @@ paper_check/
 ├── uv.lock                # Dependency lockfile
 └── README.md              # Project documentation
 ```
-
-### Dependencies
-
-1. [llama_cpp](https://github.com/abetlen/llama-cpp-python)
-2. [openpyxl](https://github.com/openpyxl/openpyxl)
-3. [flet](https://github.com/flet-dev/flet)
-4. [rapidocr](https://github.com/RapidAI/RapidOCR)
-5. [PyMuPDF](https://github.com/pymupdf/PyMuPDF)

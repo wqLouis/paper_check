@@ -6,6 +6,7 @@ import src.register as register
 from src.core import unwrap
 from src.core import unwrap_str
 from src.core import preference
+from src.core import pattributes
 
 
 def main(page: ft.Page) -> None:
@@ -300,6 +301,33 @@ def main(page: ft.Page) -> None:
     def preprocess_page(event: ft.ControlEvent) -> None:
         import src.preprocess as preprocess
 
+        def search(event: ft.ControlEvent) -> None:
+            query_dict: dict = {}
+            for i in pattributes.attribute_dict:
+                query_dict[i] = None
+                if i == "year":
+                    query_dict[i] = []
+            
+            for i in input_module.controls:
+                if isinstance(i, ft.Dropdown):
+                    query_dict[i.label] = i.value
+                    continue
+                if isinstance(i, ft.TextField):
+                    if i.value != "":
+                        if (unwrap_str(i.value)).isdigit():
+                            if i.label == "From year":
+                                query_dict["year"].append(int(unwrap_str(i.value)))
+                            if i.label == "To year":
+                                query_dict["year"].append(int(unwrap_str(i.value)))
+                        else:
+                            i.error_text = "Not digit"
+
+            if past_paper_table.rows is not None and len(query_dict["year"]) > 1:
+                past_paper_table.rows.clear()
+                for i in range(query_dict["year"][0], query_dict["year"][1] + 1):
+                    past_paper_table.rows += preprocess.get_data_from_psource(pyear=i, psbj=query_dict["sbjs"], ptype=query_dict["types"])
+            content_area.update()
+
         content_area.controls.clear()
 
         past_paper_table: ft.DataTable = ft.DataTable(columns=[
@@ -307,9 +335,10 @@ def main(page: ft.Page) -> None:
             ft.DataColumn(label=ft.Text(value="Year")),
             ft.DataColumn(label=ft.Text(value="Subject")),
             ft.DataColumn(label=ft.Text(value="Type")),
+            ft.DataColumn(label=ft.Text(value="Path"))
         ])
 
-        serach_btn: ft.IconButton = ft.IconButton(icon=ft.Icons.SEARCH, col={"sm":1})
+        serach_btn: ft.IconButton = ft.IconButton(icon=ft.Icons.SEARCH, col={"sm":1}, on_click=search)
 
         input_module: ft.ResponsiveRow = preprocess.construct_select_options()
         input_module.controls.append(serach_btn)

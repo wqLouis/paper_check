@@ -25,7 +25,8 @@ def get_data_from_psource(pyear: int | None, psbj: str | None, ptype: str | None
                     ft.DataCell(content=ft.Checkbox()),
                     ft.DataCell(content=ft.Text(value=str(i[2]))),
                     ft.DataCell(content=ft.Text(value=str(i[3]))),
-                    ft.DataCell(content=ft.Text(value=str(i[4])))
+                    ft.DataCell(content=ft.Text(value=str(i[4]))),
+                    ft.DataCell(content=ft.Text(value=str(i[1])))
                 ]
             )
         )
@@ -38,13 +39,13 @@ def construct_select_options() -> ft.ResponsiveRow:
     for i in pattributes.attribute_dict:
         if pattributes.attribute_dict[i] == "intFromTo":
             option_row.controls.append(
-                ft.TextField(label=f"From {i}", col={"md": 2, "lg": 3})
+                ft.TextField(label=f"From {i}", col={"md": 2, "lg": 2})
             )
             option_row.controls.append(
-                ft.TextField(label=f"To {i}", col={"md": 2, "lg": 3})
+                ft.TextField(label=f"To {i}", col={"md": 2, "lg": 2})
             )
         if pattributes.attribute_dict[i] == "set(str)":
-            dropdown: ft.Dropdown = ft.Dropdown(label=i, options=[], col={"md": 2, "lg": 3})
+            dropdown: ft.Dropdown = ft.Dropdown(label=i, options=[], col={"md": 2, "lg": 2})
 
             if dropdown.options is not None:
                 for j in pattributes.subattribute_dict[i]:

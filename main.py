@@ -303,6 +303,9 @@ def main(page: ft.Page) -> None:
     def preprocess_page(event: ft.ControlEvent) -> None:
         import src.preprocess as preprocess
 
+        def send_to_preprocess(event: ft.ControlEvent) -> None:
+            preprocess.send_to_ocr(datatable=past_paper_table, progress_bar=ocr_progress_bar, page=page, btn=preprocess_btn)
+
         def search(event: ft.ControlEvent | None) -> None:
             query_dict: dict = {}
             for i in pattributes.attribute_dict:
@@ -369,7 +372,8 @@ def main(page: ft.Page) -> None:
 
         item_per_page: ft.Dropdown = ft.Dropdown(label="Item per page", options=[ft.DropdownOption(
             text="10"), ft.DropdownOption(text="20"), ft.DropdownOption(text="30")], col={"sm":3, "md":5}, width=300)
-        page_num: ft.Text = ft.Text(value="0", col={"sm":1}, text_align=ft.TextAlign.CENTER)
+        page_num: ft.Text = ft.Text(value="0", col={"sm":1}, text_align=ft.TextAlign.CENTER, expand=True)
+        preprocess_btn: ft.ElevatedButton = ft.ElevatedButton(text="Preprocess", icon=ft.Icons.ARROW_RIGHT, col={"sm":3}, on_click=send_to_preprocess)
         bottom_input_module: ft.ResponsiveRow = ft.ResponsiveRow(
             controls=[
                 item_per_page,
@@ -377,9 +381,11 @@ def main(page: ft.Page) -> None:
                               on_click=minus_page_num, col={"sm":1}),
                 ft.IconButton(icon=ft.Icons.ARROW_RIGHT,
                               on_click=add_page_num, col={"sm":1}),
-                page_num
+                page_num,
+                preprocess_btn
             ]
         )
+        ocr_progress_bar: ft.ProgressBar = ft.ProgressBar()
 
         past_paper_table.rows = preprocess.get_data_from_psource(pyear=None, psbj=None, ptype=None, page_num=int(
             page_num.value if page_num.value is not None else "0"), items_per_page=(int(item_per_page.value) if item_per_page.value is not None else 10))
@@ -390,6 +396,7 @@ def main(page: ft.Page) -> None:
         content_area.controls.append(ft.Container(
         past_paper_table, alignment=ft.alignment.center, width=page.width))
         content_area.controls.append(bottom_input_module)
+        content_area.controls.append(ocr_progress_bar)
         content_area.update()
 
     def theme_mode_switch(event: ft.ControlEvent) -> None:

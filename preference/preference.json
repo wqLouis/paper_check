@@ -3,5 +3,6 @@
     "pfile_target_path": "./db/papers",
     "db_path": "./db",
     "ocr_path": "./models/ocr",
+    "temp_path": "./db/temp",
     "preference_path": "./preference"
 }

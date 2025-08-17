@@ -13,7 +13,8 @@ def main(page: ft.Page) -> None:
     page.title = "Paper Check"
     page.theme = ft.Theme(font_family="Cascadia Code")
 
-    content_area: ft.Column = ft.Column(alignment=ft.MainAxisAlignment.CENTER, scroll=ft.ScrollMode.AUTO, width=page.width)
+    content_area: ft.Column = ft.Column(
+        alignment=ft.MainAxisAlignment.CENTER, scroll=ft.ScrollMode.AUTO, width=page.width)
 
     def examine_page(event: ft.ControlEvent) -> None:
         content_area.controls.clear()
@@ -47,7 +48,7 @@ def main(page: ft.Page) -> None:
                     else file_path[0].path if file_path is not None else ""
                 )
                 register_input_module.update()
-                
+
                 return
             else:
                 error_message.value = "Error on opening file:" + (
@@ -302,13 +303,13 @@ def main(page: ft.Page) -> None:
     def preprocess_page(event: ft.ControlEvent) -> None:
         import src.preprocess as preprocess
 
-        def search(event: ft.ControlEvent) -> None:
+        def search(event: ft.ControlEvent | None) -> None:
             query_dict: dict = {}
             for i in pattributes.attribute_dict:
                 query_dict[i] = None
                 if i == "year":
                     query_dict[i] = []
-            
+
             for i in input_module.controls:
                 if isinstance(i, ft.Dropdown):
                     query_dict[i.label] = i.value
@@ -317,9 +318,11 @@ def main(page: ft.Page) -> None:
                     if i.value != "":
                         if (unwrap_str(i.value)).isdigit():
                             if i.label == "From year":
-                                query_dict["year"].append(int(unwrap_str(i.value)))
+                                query_dict["year"].append(
+                                    int(unwrap_str(i.value)))
                             if i.label == "To year":
-                                query_dict["year"].append(int(unwrap_str(i.value)))
+                                query_dict["year"].append(
+                                    int(unwrap_str(i.value)))
                         else:
                             i.error_text = "Not digit"
 
@@ -327,9 +330,23 @@ def main(page: ft.Page) -> None:
                 past_paper_table.rows.clear()
                 if len(query_dict["year"]) > 1:
                     for i in range(query_dict["year"][0], query_dict["year"][1] + 1):
-                        past_paper_table.rows += preprocess.get_data_from_psource(pyear=i, psbj=query_dict["sbjs"], ptype=query_dict["types"])
+                        past_paper_table.rows += preprocess.get_data_from_psource(pyear=i, psbj=query_dict["sbjs"], ptype=query_dict["types"], page_num=int(
+                            page_num.value if page_num.value is not None else "0"), items_per_page=(int(item_per_page.value) if item_per_page.value is not None else 10))
                 else:
-                    past_paper_table.rows += preprocess.get_data_from_psource(pyear=None, psbj=query_dict["sbjs"], ptype=query_dict["types"])
+                    past_paper_table.rows += preprocess.get_data_from_psource(pyear=None, psbj=query_dict["sbjs"], ptype=query_dict["types"], page_num=int(
+                        page_num.value if page_num.value is not None else "0"), items_per_page=(int(item_per_page.value) if item_per_page.value is not None else 10))
+            content_area.update()
+
+        def add_page_num(event: ft.ControlEvent) -> None:
+            if isinstance(page_num.value, str):
+                page_num.value = str(int(page_num.value) + 1)
+            search(None)
+            content_area.update()
+
+        def minus_page_num(event: ft.ControlEvent) -> None:
+            if isinstance(page_num.value, str) and int(page_num.value) > 0:
+                page_num.value = str(int(page_num.value) - 1)
+            search(None)
             content_area.update()
 
         content_area.controls.clear()
@@ -342,19 +359,37 @@ def main(page: ft.Page) -> None:
             ft.DataColumn(label=ft.Text(value="Path"))
         ])
 
-        serach_btn: ft.IconButton = ft.IconButton(icon=ft.Icons.SEARCH, col={"sm":1}, on_click=search)
+        serach_btn: ft.IconButton = ft.IconButton(
+            icon=ft.Icons.SEARCH, col={"sm": 1}, on_click=search)
 
         input_module: ft.ResponsiveRow = preprocess.construct_select_options()
         input_module.controls.append(serach_btn)
         input_module.alignment = ft.MainAxisAlignment.CENTER
         input_module.width = page.width
-        
-        past_paper_table.rows = preprocess.get_data_from_psource(pyear=None, psbj=None, ptype=None)
+
+        item_per_page: ft.Dropdown = ft.Dropdown(label="Item per page", options=[ft.DropdownOption(
+            text="10"), ft.DropdownOption(text="20"), ft.DropdownOption(text="30")], col={"sm":3, "md":5}, width=300)
+        page_num: ft.Text = ft.Text(value="0", col={"sm":1}, text_align=ft.TextAlign.CENTER)
+        bottom_input_module: ft.ResponsiveRow = ft.ResponsiveRow(
+            controls=[
+                item_per_page,
+                ft.IconButton(icon=ft.Icons.ARROW_LEFT,
+                              on_click=minus_page_num, col={"sm":1}),
+                ft.IconButton(icon=ft.Icons.ARROW_RIGHT,
+                              on_click=add_page_num, col={"sm":1}),
+                page_num
+            ]
+        )
+
+        past_paper_table.rows = preprocess.get_data_from_psource(pyear=None, psbj=None, ptype=None, page_num=int(
+            page_num.value if page_num.value is not None else "0"), items_per_page=(int(item_per_page.value) if item_per_page.value is not None else 10))
         past_paper_table.width = page.width
-        
+
         content_area.controls.append(input_module)
         content_area.controls.append(ft.Divider())
-        content_area.controls.append(ft.Container(past_paper_table, alignment=ft.alignment.center, width=page.width))
+        content_area.controls.append(ft.Container(
+        past_paper_table, alignment=ft.alignment.center, width=page.width))
+        content_area.controls.append(bottom_input_module)
         content_area.update()
 
     def theme_mode_switch(event: ft.ControlEvent) -> None:
@@ -397,7 +432,8 @@ def main(page: ft.Page) -> None:
     )
 
     menu_bar: ft.MenuBar = ft.MenuBar(
-        controls=[examine_btn, analysis_btn, register_btn, preprocess_btn], expand=True
+        controls=[examine_btn, analysis_btn,
+                  register_btn, preprocess_btn], expand=True
     )
 
     page.add(

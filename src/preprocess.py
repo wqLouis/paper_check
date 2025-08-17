@@ -4,7 +4,7 @@ import os
 from src.core import preference
 from src.core import pattributes
 
-def get_data_from_psource(pyear: int | None, psbj: str | None, ptype: str | None) -> list[ft.DataRow]:
+def get_data_from_psource(pyear: int | None, psbj: str | None, ptype: str | None, page_num: int, items_per_page: int) -> list[ft.DataRow]:
 
     con: sql.Connection = sql.connect("D:\\vsproject\\paper_check\\db\\past_papers.db")
     query: str = """
@@ -12,10 +12,11 @@ def get_data_from_psource(pyear: int | None, psbj: str | None, ptype: str | None
     where   (pyear = ? or ? is null) and
             (psbj = ? or ? is null) and
             (ptype = ? or ? is null)
+    limit ? offset ?
     """
 
     cur: sql.Cursor = con.cursor()
-    db_data = cur.execute(query, (pyear, pyear, psbj, psbj, ptype, ptype)).fetchall()
+    db_data = cur.execute(query, (pyear, pyear, psbj, psbj, ptype, ptype, items_per_page, page_num*items_per_page)).fetchall()
 
     data_rows: list[ft.DataRow] = []
 

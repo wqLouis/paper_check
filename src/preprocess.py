@@ -1,5 +1,6 @@
 import flet as ft
 import sqlite3 as sql
+import os
 from src.core import preference
 from src.core import pattributes
 
@@ -26,7 +27,7 @@ def get_data_from_psource(pyear: int | None, psbj: str | None, ptype: str | None
                     ft.DataCell(content=ft.Text(value=str(i[2]))),
                     ft.DataCell(content=ft.Text(value=str(i[3]))),
                     ft.DataCell(content=ft.Text(value=str(i[4]))),
-                    ft.DataCell(content=ft.Text(value=str(i[1])))
+                    ft.DataCell(content=ft.Text(spans=[ft.TextSpan(text="CLICK TO OPEN FILE", url=os.path.abspath(str(i[1])))]))
                 ]
             )
         )

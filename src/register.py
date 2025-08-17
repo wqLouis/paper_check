@@ -61,9 +61,11 @@ def register_papers(
     """
     cur: sql.Cursor = con.cursor()
 
-    new_file_name: tuple[str, str] = os.path.splitext(os.path.basename(pfile_path))
+    new_file_name: list[str] = list(os.path.splitext(os.path.basename(pfile_path)))
     with open(file=pfile_path, mode="rb") as f:
         md5sum: str = hashlib.md5(f.read()).hexdigest()
+
+    new_file_name[0] = f"{str(pyear)}_{psbj}_{ptype}"
 
     try:
         shutil.copyfile(

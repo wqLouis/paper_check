@@ -15,4 +15,5 @@ models/*
 
 # Others
 testing
-db/*
+db/papers/*
+db/past_papers.db

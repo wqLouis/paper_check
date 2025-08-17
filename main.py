@@ -43,28 +43,15 @@ def main(page: ft.Page) -> None:
                 and os.path.isfile(file_path[0].path)
             ):
                 selected_path.value = (
-                    dir_path
-                    if dir_path is not None
+                    unwrap_str(dir_path) if unwrap_str(dir_path) != ""
                     else file_path[0].path if file_path is not None else ""
                 )
                 register_input_module.update()
-                if not (
-                    file_path is not None
-                    and os.path.splitext(file_path[0].path)[1] not in allowed_extensions
-                ):
-                    auto_fill: register.PastPaper = register.register_extract_format(
-                        selected_path.value
-                    )
-                    if auto_fill.pfile_path == "":
-                        return
-                    input_row[0].value = str(auto_fill.pyear)
-                    input_row[1].value = auto_fill.psbj
-                    input_row[2].value = auto_fill.ptype
+                
                 return
             else:
                 error_message.value = "Error on opening file:" + (
-                    dir_path
-                    if dir_path is not None
+                    unwrap_str(dir_path) if unwrap_str(dir_path) != ""
                     else file_path[0].path if file_path is not None else ""
                 )
 
@@ -167,15 +154,29 @@ def main(page: ft.Page) -> None:
                         path=path, log=log_text, update_control=content_area
                     )
                 )
-            else:
+            elif mode_select.value == False:
                 path: str = unwrap_str(selected_path.value)
 
-                register.register_papers(
+                result: str | Exception = register.register_papers(
                     pfile_path=path,
                     pyear=int(unwrap_str(input_row[0].value)),
                     psbj=unwrap_str(input_row[1].value),
                     ptype=unwrap_str(input_row[2].value),
                 )
+
+                if str(result) == "":
+                    return
+
+                alert_dia = ft.AlertDialog(
+                    modal=False,
+                    title=ft.Text(value="Error"),
+                    content=ft.Text(str(result)),
+                    actions=[
+                        ft.TextButton(
+                            text="Ok", on_click=lambda _: page.close(alert_dia))
+                    ],
+                )
+                page.open(alert_dia)
 
         file_picker: ft.FilePicker = ft.FilePicker(on_result=on_dialog_result)
         file_picker.allowed_extensions = allowed_extensions
@@ -322,10 +323,13 @@ def main(page: ft.Page) -> None:
                         else:
                             i.error_text = "Not digit"
 
-            if past_paper_table.rows is not None and len(query_dict["year"]) > 1:
+            if past_paper_table.rows is not None:
                 past_paper_table.rows.clear()
-                for i in range(query_dict["year"][0], query_dict["year"][1] + 1):
-                    past_paper_table.rows += preprocess.get_data_from_psource(pyear=i, psbj=query_dict["sbjs"], ptype=query_dict["types"])
+                if len(query_dict["year"]) > 1:
+                    for i in range(query_dict["year"][0], query_dict["year"][1] + 1):
+                        past_paper_table.rows += preprocess.get_data_from_psource(pyear=i, psbj=query_dict["sbjs"], ptype=query_dict["types"])
+                else:
+                    past_paper_table.rows += preprocess.get_data_from_psource(pyear=None, psbj=query_dict["sbjs"], ptype=query_dict["types"])
             content_area.update()
 
         content_area.controls.clear()

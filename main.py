@@ -12,7 +12,7 @@ def main(page: ft.Page) -> None:
     page.title = "Paper Check"
     page.theme = ft.Theme(font_family="Cascadia Code")
 
-    content_area: ft.Column = ft.Column(alignment=ft.MainAxisAlignment.CENTER, scroll=ft.ScrollMode.AUTO)
+    content_area: ft.Column = ft.Column(alignment=ft.MainAxisAlignment.CENTER, scroll=ft.ScrollMode.AUTO, width=page.width)
 
     def examine_page(event: ft.ControlEvent) -> None:
         content_area.controls.clear()
@@ -298,6 +298,8 @@ def main(page: ft.Page) -> None:
         page.update()
 
     def preprocess_page(event: ft.ControlEvent) -> None:
+        import src.preprocess as preprocess
+
         content_area.controls.clear()
 
         past_paper_table: ft.DataTable = ft.DataTable(columns=[
@@ -305,8 +307,22 @@ def main(page: ft.Page) -> None:
             ft.DataColumn(label=ft.Text(value="Year")),
             ft.DataColumn(label=ft.Text(value="Subject")),
             ft.DataColumn(label=ft.Text(value="Type")),
-            ft.DataColumn(label=ft.Text(value="Note"))
         ])
+
+        serach_btn: ft.IconButton = ft.IconButton(icon=ft.Icons.SEARCH, col={"sm":1})
+
+        input_module: ft.ResponsiveRow = preprocess.construct_select_options()
+        input_module.controls.append(serach_btn)
+        input_module.alignment = ft.MainAxisAlignment.CENTER
+        input_module.width = page.width
+        
+        past_paper_table.rows = preprocess.get_data_from_psource(pyear=None, psbj=None, ptype=None)
+        past_paper_table.width = page.width
+        
+        content_area.controls.append(input_module)
+        content_area.controls.append(ft.Divider())
+        content_area.controls.append(ft.Container(past_paper_table, alignment=ft.alignment.center, width=page.width))
+        content_area.update()
 
     def theme_mode_switch(event: ft.ControlEvent) -> None:
 

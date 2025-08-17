@@ -70,6 +70,15 @@ class pattributes:
     types: set[str] = set(["DSE", "ALV", "CE", "OTHERS"])
     sbjs: set[str] = set(["MATH", "PHY", "CHEM", "BIO", "ICT", "OTHERS"])
 
+    attribute_dict: dict = {
+        "types" : "set(str)",
+        "sbjs" : "set(str)",
+        "year" : "intFromTo"
+    }
+    subattribute_dict: dict ={
+        "sbjs" : sbjs,
+        "types" : types
+    }
 
 def unwrap(value: T | Exception) -> T:
     """

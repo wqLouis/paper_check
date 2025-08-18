@@ -385,7 +385,7 @@ def main(page: ft.Page) -> None:
                 preprocess_btn
             ]
         )
-        ocr_progress_bar: ft.ProgressBar = ft.ProgressBar()
+        ocr_progress_bar: ft.ProgressBar = ft.ProgressBar(value=0)
 
         past_paper_table.rows = preprocess.get_data_from_psource(pyear=None, psbj=None, ptype=None, page_num=int(
             page_num.value if page_num.value is not None else "0"), items_per_page=(int(item_per_page.value) if item_per_page.value is not None else 10))

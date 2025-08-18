@@ -10,8 +10,10 @@ storage
 # Virtual environments
 .venv
 
-# Embeddings models
-models/*
+# models
+models/embeddings/*
+models/llm/*
+models/ocr/*
 
 # Others
 testing

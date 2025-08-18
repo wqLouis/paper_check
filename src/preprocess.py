@@ -96,3 +96,4 @@ def send_to_ocr(datatable: ft.DataTable, progress_bar: ft.ProgressBar, page: ft.
             
             with open(f"{preference.setting_dict["temp_path"]}{file_name}", mode="w") as f:
                 json.dump(result_str, f, indent=4)
+    

@@ -165,6 +165,9 @@ def main(page: ft.Page) -> None:
                     ptype=unwrap_str(input_row[2].value),
                 )
 
+                log_text.value = unwrap_str(log_text.value)
+                log_text.value += f">{path}"
+
                 if str(result) == "":
                     return
 
@@ -304,7 +307,11 @@ def main(page: ft.Page) -> None:
         import src.preprocess as preprocess
 
         def send_to_preprocess(event: ft.ControlEvent) -> None:
-            preprocess.send_to_ocr(datatable=past_paper_table, progress_bar=ocr_progress_bar, page=page, btn=preprocess_btn)
+            preprocess_btn.disabled = True
+            page.update()
+            preprocess.send_to_preprocess(datatable=past_paper_table, progress_bar=ocr_progress_bar, page=page, btn=preprocess_btn)
+            ocr_progress_bar.value = 0
+            preprocess_btn.disabled = False
 
         def search(event: ft.ControlEvent | None) -> None:
             query_dict: dict = {}

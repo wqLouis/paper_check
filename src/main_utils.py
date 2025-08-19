@@ -21,7 +21,7 @@ def load_model(path: str) -> Exception | Llama:
         return e
 
 
-def examine(data: list[str] | str, pid: int) -> Exception | None:
+def examine(data: list[str], pid: int) -> Exception | None:
     """
     Examine the input and create a sqlite db for further analsys
     Returns:
@@ -43,13 +43,10 @@ def examine(data: list[str] | str, pid: int) -> Exception | None:
         INSERT INTO qsource (qstr, qebd_v, pid)
         VALUES (?, ?, ?)
     """
-    if isinstance(data, list):
-        for i in data:
-            qebd_v: bytes = np.array(model.embed(i)).tobytes()
-            cur.execute(insert_query, (i, qebd_v, pid))
-    else:
-        qebd_v: bytes = np.array(model.embed(data)).tobytes()
-        cur.execute(insert_query, (data, qebd_v, pid))
+    
+    for i in data:
+        qebd_v: bytes = np.array(model.embed(i)).tobytes()
+        cur.execute(insert_query, (i, qebd_v, pid))
 
     con.commit()
 

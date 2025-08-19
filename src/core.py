@@ -13,7 +13,7 @@ class preference:
     model_path: str = "./models"
     pfile_target_path: str = "./db/papers"
     db_path: str = "./db"
-    ocr_model: str = "./models/ocr/"
+    ocr_model: str = "./models/ocr"
 
     setting_dict: dict = {  # Will be used to replace original preference
         "model_path": "./models",

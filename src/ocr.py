@@ -19,8 +19,8 @@ def pdf_ocr(path: str, page_progress_bar: ft.ProgressBar, page: ft.Page, btn: ft
     text: list[str] = []
 
     engine: rapidocr.RapidOCR = rapidocr.RapidOCR(params={
-        "Det.model_path" : f"{preference.ocr_model}ch_PP-OCRv5_mobile_det.onnx",
-        "Rec.model_path" : f"{preference.ocr_model}ch_PP-OCRv5_rec_mobile_infer.onnx"
+        "Det.model_path" : f"{preference.ocr_model}/ch_PP-OCRv5_mobile_det.onnx",
+        "Rec.model_path" : f"{preference.ocr_model}/ch_PP-OCRv5_rec_mobile_infer.onnx"
     })
 
     page_count: int = len(pdf)
@@ -32,5 +32,4 @@ def pdf_ocr(path: str, page_progress_bar: ft.ProgressBar, page: ft.Page, btn: ft
             img_content=np.array(pdf_page), use_det=True, use_cls=False, use_rec=True
         )
         text += list(ocr_result.txts)  # type: ignore
-    btn.disabled = False
     return text

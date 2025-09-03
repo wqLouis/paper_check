@@ -1,8 +1,11 @@
 # Paper Check
 
 ## A similarity checker for past papers
-`I will rewrite this entire repo later`
+
 ---
+
+`I will rewrite this entire repo later`
+This Repo is currently under development, most functions are not working yet <3
 
 ### About this project
 

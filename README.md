@@ -1,7 +1,7 @@
 # Paper Check
 
 ## A similarity checker for past papers
-
+`I will rewrite this entire repo later`
 ---
 
 ### About this project

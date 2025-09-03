@@ -22,6 +22,7 @@ class preference:
         "ocr_path": "./models/ocr",
         "temp_path": "./db/temp",
         "preference_path": "./preference",
+        "plugins_path": "./plugins"
     }
 
     def check_dir_valid(self, text_field: ft.TextField, page: ft.Page) -> bool:

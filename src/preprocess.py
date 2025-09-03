@@ -170,6 +170,10 @@ def send_to_preprocess(datatable: ft.DataTable, progress_bar: ft.ProgressBar, pa
                         ```json
                         []
                         ```
+                        If question is incomplete, return:
+                        ```json
+                        ["incomplete"]
+                        ```
 
                         ---
 
@@ -203,24 +207,42 @@ def send_to_preprocess(datatable: ft.DataTable, progress_bar: ft.ProgressBar, pa
                         ---
 
                         """
+    sbj_prompt: dict = None
+    if os.path.exists(preference.setting_dict["plugins_path"] + "/sbj_prompt.json"):
+        # try to load subject specify prompt
+        with open(file=(preference.setting_dict["plugins_path"] + "/sbj_prompt.json"), mode="r") as f:
+            sbj_prompt:dict = json.load(f)
+        
 
     llm.create_chat_completion(messages=[{
         "role" : "system",
         "content" : sys_prompt
     }])
 
+    chunk_size: int = 10
+    iteration_len: int = 5
+
     for i in ocred_pdf_list:
         with open(file=i, mode="r") as f:
             json_str: str = str(json.load(f))
+        if len(json_str) <= 0:
+            return
+        ptr: int = 0
+        failed_count: int = 0
         while True:
+            chunked: str = json_str[ptr:ptr+chunk_size]
             llm_raw_result = str(llm.create_chat_completion(messages=[{
                 "role" : "user",
-                "content" : json_str
+                "content" : chunked
             }]))
             try:
                 llm_result = json.loads(llm_raw_result)
             except ValueError:
-                continue
+                failed_count += iteration_len
+                if failed_count > 5:
+                    print(f"failed to process: {ptr}")
+                else:
+                    continue
             break
 
         with open(file=f"{preference.setting_dict["temp_path"]}/filtered/{os.path.basename(i)}", mode="w") as f:

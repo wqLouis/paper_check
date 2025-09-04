@@ -207,13 +207,12 @@ def send_to_preprocess(datatable: ft.DataTable, progress_bar: ft.ProgressBar, pa
                         ---
 
                         """
-    sbj_prompt: dict = None
+    sbj_prompt: dict = {}
     if os.path.exists(preference.setting_dict["plugins_path"] + "/sbj_prompt.json"):
         # try to load subject specify prompt
         with open(file=(preference.setting_dict["plugins_path"] + "/sbj_prompt.json"), mode="r") as f:
             sbj_prompt:dict = json.load(f)
         
-
     llm.create_chat_completion(messages=[{
         "role" : "system",
         "content" : sys_prompt
@@ -223,6 +222,15 @@ def send_to_preprocess(datatable: ft.DataTable, progress_bar: ft.ProgressBar, pa
     iteration_len: int = 5
 
     for i in ocred_pdf_list:
+        # Parse file name and use sbj_prompt
+        if i.split("_")[1] in sbj_prompt:
+            print(f"found subject specific prompt: {sbj_prompt[i.split("_")[1]]}")
+            llm.reset()
+            llm.create_chat_completion(messages=[{
+                "role" : "system",
+                "content" : sbj_prompt[i.split("_")[1]]
+            }])
+        
         with open(file=i, mode="r") as f:
             json_str: str = str(json.load(f))
         if len(json_str) <= 0:

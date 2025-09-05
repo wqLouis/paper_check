@@ -309,7 +309,8 @@ def main(page: ft.Page) -> None:
         def send_to_preprocess(event: ft.ControlEvent) -> None:
             preprocess_btn.disabled = True
             page.update()
-            preprocess.send_to_preprocess(datatable=past_paper_table, progress_bar=ocr_progress_bar, page=page, btn=preprocess_btn)
+            result:tuple[list[str], list[str]] = preprocess.send_to_preprocess(datatable=past_paper_table, progress_bar=ocr_progress_bar, page=page, btn=preprocess_btn) or ([], [])
+            
             ocr_progress_bar.value = 0
             preprocess_btn.disabled = False
 

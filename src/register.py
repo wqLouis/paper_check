@@ -182,3 +182,6 @@ def register_extract_format(file: str) -> PastPaper:
         past_paper.ptype = para[2]
 
     return past_paper
+
+def register_question(ebd: bytes, question: str):
+    pass

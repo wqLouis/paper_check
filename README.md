@@ -4,7 +4,7 @@
 
 ---
 
-`I will rewrite this entire repo later`
+`I will rewrite this entire repo later`\
 This Repo is currently under development, most functions are not working yet <3
 
 ### About this project
@@ -13,7 +13,7 @@ This project is designed to analyze academic examination papers for textual simi
 
 ### Features
 
-- PDF file input (WIP)
+- PDF file input ✅
 - Text similarity analysis (WIP)
 
 ### Installation
@@ -42,7 +42,7 @@ Before you analysis:
 Register paper -> OCR and preprocess -> Examine
 
 
-### Project Structure
+### Project Structure (Outdated)
 
 ```
 paper_check/

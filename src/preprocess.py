@@ -7,19 +7,26 @@ import src.ocr as ocr
 from src.core import preference
 from src.core import pattributes
 from src.main_utils import load_model
-from llama_cpp import Llama
+#from llama_cpp import Llama
 
-def get_data_from_psource(pyear: int | None, psbj: str | None, ptype: str | None, page_num: int, items_per_page: int) -> list[ft.DataRow]:
+
+def get_data_from_psource(
+    pyear: int | None,
+    psbj: str | None,
+    ptype: str | None,
+    page_num: int,
+    items_per_page: int,
+) -> list[ft.DataRow]:
     """
-        Fetch data from psource of db
-        Args:
-            pyear: Year
-            psbj: Subject
-            ptype: Past paper type
-            page_num: The page number of the table
-            items_per_page: The no. of element in one page
-        Returns:
-            list[ft.DataRow]
+    Fetch data from psource of db
+    Args:
+        pyear: Year
+        psbj: Subject
+        ptype: Past paper type
+        page_num: The page number of the table
+        items_per_page: The no. of element in one page
+    Returns:
+        list[ft.DataRow]
     """
 
     try:
@@ -27,10 +34,11 @@ def get_data_from_psource(pyear: int | None, psbj: str | None, ptype: str | None
     except sql.OperationalError as e:
         try:
             import src.core as core
+
             con: sql.Connection = core.unwrap(core.init_db())
         except:
             print("Tried to connect and create db failed...")
-    
+
     query: str = """
     select * from psource
     where   (pyear = ? or ? is null) and
@@ -40,7 +48,19 @@ def get_data_from_psource(pyear: int | None, psbj: str | None, ptype: str | None
     """
 
     cur: sql.Cursor = con.cursor()
-    db_data = cur.execute(query, (pyear, pyear, psbj, psbj, ptype, ptype, items_per_page, page_num*items_per_page)).fetchall()
+    db_data = cur.execute(
+        query,
+        (
+            pyear,
+            pyear,
+            psbj,
+            psbj,
+            ptype,
+            ptype,
+            items_per_page,
+            page_num * items_per_page,
+        ),
+    ).fetchall()
 
     data_rows: list[ft.DataRow] = []
 
@@ -52,16 +72,26 @@ def get_data_from_psource(pyear: int | None, psbj: str | None, ptype: str | None
                     ft.DataCell(content=ft.Text(value=str(i[2]))),
                     ft.DataCell(content=ft.Text(value=str(i[3]))),
                     ft.DataCell(content=ft.Text(value=str(i[4]))),
-                    ft.DataCell(content=ft.Text(spans=[ft.TextSpan(text="CLICK TO OPEN FILE", url=os.path.abspath(str(i[1])))]))
+                    ft.DataCell(
+                        content=ft.Text(
+                            spans=[
+                                ft.TextSpan(
+                                    text="CLICK TO OPEN FILE",
+                                    url=os.path.abspath(str(i[1])),
+                                )
+                            ]
+                        )
+                    ),
                 ]
             )
         )
-    
+
     return data_rows
+
 
 def construct_select_options() -> ft.ResponsiveRow:
     option_row: ft.ResponsiveRow = ft.ResponsiveRow()
-    
+
     for i in pattributes.attribute_dict:
         if pattributes.attribute_dict[i] == "intFromTo":
             option_row.controls.append(
@@ -71,53 +101,81 @@ def construct_select_options() -> ft.ResponsiveRow:
                 ft.TextField(label=f"To {i}", col={"md": 2, "lg": 2})
             )
         if pattributes.attribute_dict[i] == "set(str)":
-            dropdown: ft.Dropdown = ft.Dropdown(label=i, options=[], col={"md": 2, "lg": 2})
+            dropdown: ft.Dropdown = ft.Dropdown(
+                label=i, options=[], col={"md": 2, "lg": 2}
+            )
 
             if dropdown.options is not None:
                 for j in pattributes.subattribute_dict[i]:
-                    dropdown.options.append(
-                        ft.DropdownOption(
-                            text=str(j)
-                        )
-                    )
-            option_row.controls.append(
-                dropdown
-            )
+                    dropdown.options.append(ft.DropdownOption(text=str(j)))
+            option_row.controls.append(dropdown)
     return option_row
 
-def send_to_preprocess(datatable: ft.DataTable, progress_bar: ft.ProgressBar, page: ft.Page, btn: ft.ElevatedButton, model_name: str = "Qwen3-8B-Q5_0.gguf") -> tuple[list[list[str]], list[str]] | None:
+
+def send_to_preprocess(
+    datatable: ft.DataTable | list[str],
+    progress_bar: ft.ProgressBar | None,
+    page: ft.Page,
+    btn: ft.ElevatedButton,
+    model_name: str = "Qwen3-8B-Q5_0.gguf",
+) -> tuple[list[list[str]], list[str]] | None:
     """
-        Preprocess the past paper throgh a pipeline:
-        Fetch pdf -> OCR -> LLM filter unwanted text -> Embeddings -> Insert questions into DB
+    Preprocess the past paper throgh a pipeline:
+    Fetch pdf -> OCR -> LLM filter unwanted text -> Embeddings -> Insert questions into DB
+
+    Args:
+        datatable: A flet datatable or a list[str]
+        progress_bar: For progress of OCR. If None then a dummy progress_bar will be created in the function
+        page: The flet app page
+        btn: The elevated button for triggering this function. Will try to disable the button prevent excess request.
+        model_name: The llm model used for slicing the OCR string
+
+    Returns:
+        The result of preprocess: tuple[list[list[str]], list[str]]. The first element in the tuple contains the result list of each paper and in the list it contains the list of sliced string. The second element contains the file name of the preprocessed PDFs.
+        None: The function return None when there is no result
     """
 
+    from llama_cpp import Llama
 
-    selected_papers: dict ={
-        "year" : [],
-        "sbj" : [],
-        "type" : [],
-        "path" : []
-    }
-    
-    if datatable.rows is not None:
+    selected_papers: dict = {"year": [], "sbj": [], "type": [], "path": []}
+
+    if progress_bar is None:
+        progress_bar = ft.ProgressBar()  # dummy bar
+
+    if datatable is ft.DataTable and datatable.rows is not None:
         for i in datatable.rows:
             selected: bool = False
-            for (j, cell) in enumerate(i.cells):
-                selected = True if j == 0 and cell.content.value == True else selected # type: ignore
+            for j, cell in enumerate(i.cells):
+                selected = True if j == 0 and cell.content.value == True else selected
                 if selected:
                     if j == 1:
-                        selected_papers["year"].append(cell.content.value) # type: ignore
+                        selected_papers["year"].append(cell.content.value)
                     elif j == 2:
-                        selected_papers["sbj"].append(cell.content.value) # type: ignore
+                        selected_papers["sbj"].append(cell.content.value)
                     elif j == 3:
-                        selected_papers["type"].append(cell.content.value) # type: ignore
+                        selected_papers["type"].append(cell.content.value)
                     elif j == 4:
-                        selected_papers["path"].append(cell.content.spans[0].url) # type: ignore
-    
+                        selected_papers["path"].append(cell.content.spans[0].url)
+    elif datatable is list[str]:
+        datatable_filename: list[str] = [os.path.basename(i) for i in datatable]
+        for idx, i in enumerate(datatable_filename):
+            if not os.path.exists(i):
+                datatable[idx] = "ERROR"
+            else:
+                if i is str:
+                    parsed_papers: list[str] = i.split("_")
+                    selected_papers["year"] = parsed_papers[0]
+                    selected_papers["sbj"] = parsed_papers[1]
+                    selected_papers["type"] = parsed_papers[2]
+                    selected_papers["path"] = datatable[idx]
+
     if len(selected_papers["path"]) == 0:
         return
 
-    ocred_pdf_list = [os.path.splitext(os.path.basename(i))[0] for i in glob.glob(f"{preference.setting_dict["temp_path"]}/*.json")]
+    ocred_pdf_list = [
+        os.path.splitext(os.path.basename(i))[0]
+        for i in glob.glob(f"{preference.setting_dict["temp_path"]}/*.json")
+    ]
 
     for i in selected_papers["path"]:
         if os.path.splitext(os.path.basename(i))[0] in ocred_pdf_list:
@@ -125,15 +183,19 @@ def send_to_preprocess(datatable: ft.DataTable, progress_bar: ft.ProgressBar, pa
 
         if os.path.splitext(os.path.basename(i))[1] == ".pdf":
             progress_bar.value = 0
-            result_str: list[str] = (ocr.pdf_ocr(i, page_progress_bar=progress_bar, page=page, btn=btn))
-            
+            result_str: list[str] = ocr.pdf_ocr(
+                i, page_progress_bar=progress_bar, page=page, btn=btn
+            )
+
             file_name: str = f"/{os.path.splitext(os.path.basename(i))[0]}.json"
-            
-            with open(f"{preference.setting_dict["temp_path"]}{file_name}", mode="w") as f:
+
+            with open(
+                f"{preference.setting_dict["temp_path"]}{file_name}", mode="w"
+            ) as f:
                 json.dump(result_str, f, indent=4)
-    
+
     ocred_pdf_list = glob.glob(f"{preference.setting_dict["temp_path"]}/*.json")
-    
+
     if len(ocred_pdf_list) == 0:
         return
 
@@ -142,16 +204,25 @@ def send_to_preprocess(datatable: ft.DataTable, progress_bar: ft.ProgressBar, pa
     pid_list: list[int] = []
 
     for i in ocred_pdf_list:
-        pid_list.append(int(cur.execute("select pid from psource where pfile_path like ?", f"%{os.path.splitext(os.path.basename(i))[0]}%").fetchone()[0]))
-    
+        pid_list.append(
+            int(
+                cur.execute(
+                    "select pid from psource where pfile_path like ?",
+                    f"%{os.path.splitext(os.path.basename(i))[0]}%",
+                ).fetchone()[0]
+            )
+        )
+
     if os.path.exists(f"{preference.model_path}/llm/{model_name}"):
-        llm: Llama = Llama(model_path=f"{preference.model_path}/llm/{model_name}", verbose=False)
+        llm: Llama = Llama(
+            model_path=f"{preference.model_path}/llm/{model_name}", verbose=False
+        )
     else:
         return
 
     os.mkdir(f"{preference.setting_dict["temp_path"]}/filtered")
 
-    sys_prompt: str =   """
+    sys_prompt: str = """
                         You are an AI responsible for preprocessing OCR-extracted text from exam papers for use in embedding models. You will receive a **list of strings**, where each string represents a line (or text block) from the OCR result.
 
                         Your task is to:
@@ -217,13 +288,13 @@ def send_to_preprocess(datatable: ft.DataTable, progress_bar: ft.ProgressBar, pa
     sbj_prompt: dict = {}
     if os.path.exists(preference.setting_dict["plugins_path"] + "/sbj_prompt.json"):
         # try to load subject specify prompt
-        with open(file=(preference.setting_dict["plugins_path"] + "/sbj_prompt.json"), mode="r") as f:
-            sbj_prompt:dict = json.load(f)
-        
-    llm.create_chat_completion(messages=[{
-        "role" : "system",
-        "content" : sys_prompt
-    }])
+        with open(
+            file=(preference.setting_dict["plugins_path"] + "/sbj_prompt.json"),
+            mode="r",
+        ) as f:
+            sbj_prompt: dict = json.load(f)
+
+    llm.create_chat_completion(messages=[{"role": "system", "content": sys_prompt}])
 
     chunk_size: int = 10
     iteration_len: int = 5
@@ -234,11 +305,10 @@ def send_to_preprocess(datatable: ft.DataTable, progress_bar: ft.ProgressBar, pa
         if i.split("_")[1] in sbj_prompt:
             print(f"found subject specific prompt: {sbj_prompt[i.split("_")[1]]}")
             llm.reset()
-            llm.create_chat_completion(messages=[{
-                "role" : "system",
-                "content" : sbj_prompt[i.split("_")[1]]
-            }])
-        
+            llm.create_chat_completion(
+                messages=[{"role": "system", "content": sbj_prompt[i.split("_")[1]]}]
+            )
+
         with open(file=i, mode="r") as f:
             json_str: str = str(json.load(f))
         if len(json_str) <= 0:
@@ -246,11 +316,12 @@ def send_to_preprocess(datatable: ft.DataTable, progress_bar: ft.ProgressBar, pa
         ptr: int = 0
         failed_count: int = 0
         while True:
-            chunked: str = json_str[ptr:ptr+chunk_size]
-            llm_raw_result = str(llm.create_chat_completion(messages=[{
-                "role" : "user",
-                "content" : chunked
-            }]))
+            chunked: str = json_str[ptr : ptr + chunk_size]
+            llm_raw_result = str(
+                llm.create_chat_completion(
+                    messages=[{"role": "user", "content": chunked}]
+                )
+            )
             try:
                 llm_result[-1] += json.loads(llm_raw_result)
             except ValueError:
@@ -261,5 +332,5 @@ def send_to_preprocess(datatable: ft.DataTable, progress_bar: ft.ProgressBar, pa
                     continue
             break
         llm_result.append([])
-        
+
     return (llm_result, ocred_pdf_list)

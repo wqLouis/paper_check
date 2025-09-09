@@ -45,7 +45,7 @@ def examine(data: list[str], pid: int) -> Exception | None:
     """
     
     for i in data:
-        qebd_v: bytes = np.array(model.embed(i)).tobytes()
+        qebd_v: bytes = np.array(model.embed(i)).tobytes() # TODO: Replace Sqlite to another Vector DB
         cur.execute(insert_query, (i, qebd_v, pid))
 
     con.commit()
@@ -53,7 +53,7 @@ def examine(data: list[str], pid: int) -> Exception | None:
 
 def analysis() -> Exception | None:
     """
-    Analysis simularity mode
+    Analysis simularity mode (Not working)
 
     Args:
         model_path: Path of embedding model
@@ -61,11 +61,6 @@ def analysis() -> Exception | None:
         None: Return exception if error occurs
     """
 
-    while True:
-        input_xl_path: str = str(input("Path to xlsx:"))
-        if os.path.exists(input_xl_path):
-            break
-
     model: Llama = unwrap(load_model(model_path))
     _ = model  # Prevent unused variable error
-    print("done")
+    print("Uncomplete function")

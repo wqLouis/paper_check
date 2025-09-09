@@ -1,9 +1,9 @@
 from llama_cpp import Llama
 import os
 import sqlite3 as sql
-from core import unwrap
-from core import init_db
-from core import preference
+from src.core import unwrap
+from src.core import init_db
+from src.core import preference
 import numpy as np
 
 model_path: str = preference.model_path

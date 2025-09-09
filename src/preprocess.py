@@ -22,8 +22,15 @@ def get_data_from_psource(pyear: int | None, psbj: str | None, ptype: str | None
             list[ft.DataRow]
     """
 
-
-    con: sql.Connection = sql.connect("D:\\vsproject\\paper_check\\db\\past_papers.db")
+    try:
+        con: sql.Connection = sql.connect(f"{preference.db_path}/past_papers.db")
+    except sql.OperationalError as e:
+        try:
+            import src.core as core
+            con: sql.Connection = core.unwrap(core.init_db())
+        except:
+            print("Tried to connect and create db failed...")
+    
     query: str = """
     select * from psource
     where   (pyear = ? or ? is null) and

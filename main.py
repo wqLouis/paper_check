@@ -19,10 +19,18 @@ def main(page: ft.Page) -> None:
 
     def examine_page(event: ft.ControlEvent) -> None:
         content_area.controls.clear()
+        content_area.controls.append(
+            ft.Text(value="deprecated, use preprocess instead")
+        )
         page.update()
 
     def analysis_page(event: ft.ControlEvent) -> None:
-        pass
+        content_area.controls.clear()
+        
+        upload_btn: ft.ElevatedButton = ft.ElevatedButton(text="Upload", icon=ft.Icons.UPLOAD)
+
+        content_area.controls += [upload_btn]
+        content_area.update()
 
     def register_page(event: ft.ControlEvent) -> None:
         content_area.controls.clear()

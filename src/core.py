@@ -111,7 +111,7 @@ def init_db() -> Exception | sql.Connection:
 
     if not os.path.exists(preference.pfile_target_path):
         try:
-            os.mkdir(preference.db_path)
+            os.mkdir(preference.pfile_target_path)
         except Exception as e:
             return e
 

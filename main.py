@@ -3,6 +3,7 @@ import os
 import glob
 import src.core as core
 import src.register as register
+import src.main_utils as main_utils
 from src.core import unwrap
 from src.core import unwrap_str
 from src.core import preference
@@ -309,8 +310,9 @@ def main(page: ft.Page) -> None:
         def send_to_preprocess(event: ft.ControlEvent) -> None:
             preprocess_btn.disabled = True
             page.update()
-            result:tuple[list[str], list[str]] = preprocess.send_to_preprocess(datatable=past_paper_table, progress_bar=ocr_progress_bar, page=page, btn=preprocess_btn) or ([], [])
-            
+            result:tuple[list[list[str]], list[str]] = preprocess.send_to_preprocess(datatable=past_paper_table, progress_bar=ocr_progress_bar, page=page, btn=preprocess_btn) or ([], [])
+            for (idx, i) in enumerate(result[0]):
+                unwrap(main_utils.examine(i, int(result[1][idx])))
             ocr_progress_bar.value = 0
             preprocess_btn.disabled = False
 

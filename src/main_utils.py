@@ -49,7 +49,7 @@ def examine(data: list[str], pid: int) -> Exception | None:
         cur.execute(insert_query, (i, qebd_v, pid))
 
     con.commit()
-
+    con.close()
 
 def analysis() -> Exception | None:
     """

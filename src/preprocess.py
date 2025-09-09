@@ -78,7 +78,7 @@ def construct_select_options() -> ft.ResponsiveRow:
             )
     return option_row
 
-def send_to_preprocess(datatable: ft.DataTable, progress_bar: ft.ProgressBar, page: ft.Page, btn: ft.ElevatedButton, model_name: str = "Qwen3-8B-Q5_0.gguf") -> tuple[list[str], list[str]] | None:
+def send_to_preprocess(datatable: ft.DataTable, progress_bar: ft.ProgressBar, page: ft.Page, btn: ft.ElevatedButton, model_name: str = "Qwen3-8B-Q5_0.gguf") -> tuple[list[list[str]], list[str]] | None:
     """
         Preprocess the past paper throgh a pipeline:
         Fetch pdf -> OCR -> LLM filter unwanted text -> Embeddings -> Insert questions into DB
@@ -220,7 +220,7 @@ def send_to_preprocess(datatable: ft.DataTable, progress_bar: ft.ProgressBar, pa
 
     chunk_size: int = 10
     iteration_len: int = 5
-    llm_result: list[str] = []
+    llm_result: list[list[str]] = []
 
     for i in ocred_pdf_list:
         # Parse file name and use sbj_prompt
@@ -245,7 +245,7 @@ def send_to_preprocess(datatable: ft.DataTable, progress_bar: ft.ProgressBar, pa
                 "content" : chunked
             }]))
             try:
-                llm_result += json.loads(llm_raw_result)
+                llm_result[-1] += json.loads(llm_raw_result)
             except ValueError:
                 failed_count += iteration_len
                 if failed_count > 5:
@@ -253,7 +253,6 @@ def send_to_preprocess(datatable: ft.DataTable, progress_bar: ft.ProgressBar, pa
                 else:
                     continue
             break
-
-        # TODO:Add a empty [] for llm_result
+        llm_result.append([])
         
     return (llm_result, ocred_pdf_list)

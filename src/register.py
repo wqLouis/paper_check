@@ -96,6 +96,9 @@ def register_papers(
         con.commit()
     else:
         return f"{preference.pfile_target_path}/{new_file_name[0]+"_"+md5sum+new_file_name[1]} already exists\n"
+    
+    con.close()
+    
     return ""
 
 
@@ -183,5 +186,20 @@ def register_extract_format(file: str) -> PastPaper:
 
     return past_paper
 
-def register_question(ebd: bytes, question: str):
-    pass
+def register_question(questions: list[str], pname: str):
+    
+    con: sql.Connection = sql.connect(f"{preference.db_path}/past_paper.db")
+    cur: sql.Cursor = con.cursor()
+    
+    query: str ="""
+                select pid from psource
+                where pname = ?;
+                """
+
+    pid:int = cur.execute(query, (pname,)).fetchone()[0] # fetch the pid of pname
+
+    con.close()
+
+    import src.main_utils as main_utils
+
+    main_utils.examine(data=questions, pid=pid)

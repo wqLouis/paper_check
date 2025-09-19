@@ -7,7 +7,8 @@ import src.ocr as ocr
 from src.core import preference
 from src.core import pattributes
 from src.main_utils import load_model
-#from llama_cpp import Llama
+
+# from llama_cpp import Llama
 
 
 def get_data_from_psource(
@@ -316,21 +317,27 @@ def send_to_preprocess(
         ptr: int = 0
         failed_count: int = 0
         while True:
-            chunked: str = json_str[ptr : ptr + chunk_size]
-            llm_raw_result = str(
-                llm.create_chat_completion(
-                    messages=[{"role": "user", "content": chunked}]
+            chunked: str = json_str[ptr : min(ptr + chunk_size, len(json_str) - 1)]
+            while True:
+                llm_raw_result = str(
+                    llm.create_chat_completion(
+                        messages=[{"role": "user", "content": chunked}]
+                    )
                 )
-            )
-            try:
-                llm_result[-1] += json.loads(llm_raw_result)
-            except ValueError:
-                failed_count += iteration_len
-                if failed_count > 5:
-                    print(f"failed to process: {ptr}")
-                else:
-                    continue
-            break
-        llm_result.append([])
+                try:
+                    llm_result[-1] += json.loads(llm_raw_result)
+                except ValueError:
+                    failed_count += 1
+                    if failed_count > 5:
+                        print(f"failed to process: {ptr}")
+                    else:
+                        continue
+                break
+            if ptr + chunk_size > len(json_str) - 1:
+                break
+            ptr += iteration_len
+            progress_bar.value = min(float(ptr) / float(json_str), 1)
+            page.update() # idk is this needed
+            llm_result.append([])
 
     return (llm_result, ocred_pdf_list)

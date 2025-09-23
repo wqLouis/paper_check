@@ -5,6 +5,7 @@ description = "A paper simularity checker"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "chromadb>=1.1.0",
     "flet[all]>=0.28.3",
     "llama-cpp-python>=0.3.15",
     "onnxruntime>=1.22.1",

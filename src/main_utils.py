@@ -51,7 +51,7 @@ def examine(data: list[str], pid: int) -> Exception | None:
     con.commit()
     con.close()
 
-def analysis() -> Exception | None:
+def analysis(input: str) -> Exception | str:
     """
     Analysis simularity mode (Not working)
 
@@ -63,4 +63,6 @@ def analysis() -> Exception | None:
 
     model: Llama = unwrap(load_model(model_path))
     _ = model  # Prevent unused variable error
-    print("Uncomplete function")
+
+
+    return Exception("Uncomplete function")

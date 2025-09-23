@@ -34,13 +34,17 @@ def main(page: ft.Page) -> None:
             upload_btn.disabled = True
             if event.files is None:
                 return
-            file_path = str(event.files[0])  # dropped other result
-            if not os.path.exists(file_path):
-                return
+            file_path = [i.path for i in event.files]
             import src.preprocess as preprocess
-            result: tuple[list[list[str]], list[str]] = preprocess.send_to_preprocess(datatable=[file_path], progress_bar=None, page=page, btn=upload_btn) or ([[]], [])
+            result: tuple[list[list[str]], list[str]] = preprocess.send_to_preprocess(datatable=file_path, progress_bar=None, page=page, btn=upload_btn) or ([[]], [])
             
             # TODO: Check simularity with main_utils.analysis (Which is not done)
+            matched: list[list[str]] = [[]]
+            if len(result[1]) == 0 or len(result[0][0]) == 0:
+                for (idx,i) in enumerate(result[0]):
+                    for j in i:
+                        matched[idx].append(unwrap(main_utils.analysis(j)))
+
 
         upload_btn: ft.ElevatedButton = ft.ElevatedButton(
             text="Upload",

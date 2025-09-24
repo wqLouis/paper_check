@@ -23,7 +23,7 @@ def main(page: ft.Page) -> None:
     def examine_page(event: ft.ControlEvent) -> None:
         content_area.controls.clear()
         content_area.controls.append(
-            ft.Text(value="deprecated, use preprocess instead")
+            ft.Text(value="WIP")
         )
         page.update()
 
@@ -33,6 +33,7 @@ def main(page: ft.Page) -> None:
         def file_selected(event: ft.FilePickerResultEvent) -> None:
             upload_btn.disabled = True
             if event.files is None:
+                upload_btn.disabled = False
                 return
             file_path = [i.path for i in event.files]
             import src.preprocess as preprocess
@@ -45,7 +46,6 @@ def main(page: ft.Page) -> None:
                     for j in i:
                         matched[idx].append(unwrap(main_utils.analysis(j)))
 
-
         upload_btn: ft.ElevatedButton = ft.ElevatedButton(
             text="Upload",
             icon=ft.Icons.UPLOAD,
@@ -54,6 +54,8 @@ def main(page: ft.Page) -> None:
             ),
         )
         file_picker: ft.FilePicker = ft.FilePicker(on_result=file_selected)
+        page.overlay.append(file_picker)
+        page.update()
 
         content_area.controls += [upload_btn]
         content_area.update()

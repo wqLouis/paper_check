@@ -142,7 +142,6 @@ def init_db() -> Exception | sql.Connection:
         CREATE TABLE qsource(
             qid INTEGER PRIMARY KEY AUTOINCREMENT,
             qstr TEXT NOT NULL,
-            qebd_v BLOB NOT NULL,
             pid INTEGER NOT NULL,
             FOREIGN KEY (pid) REFERENCES psource(pid)
         );

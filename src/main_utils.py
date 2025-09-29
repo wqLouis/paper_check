@@ -67,7 +67,7 @@ def analysis(input: str) -> Exception | str:
 
     client = chromadb.PersistentClient(preference.setting_dict["vcdb_path"]+"/embed.db")
     collection = client.get_collection(
-        name="collection"
+        name="questions"
     )
     query_result = collection.query()
 

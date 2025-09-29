@@ -238,9 +238,9 @@ def send_to_preprocess(
             )
         )
 
-    if os.path.exists(f"{preference.model_path}/llm/{model_name}"):
+    if os.path.exists(preference.model_path):
         llm: Llama = Llama(
-            model_path=f"{preference.model_path}/llm/{model_name}", verbose=False
+            model_path=preference.model_path, verbose=False
         )
     else:
         return
@@ -375,14 +375,31 @@ def send_to_preprocess(
 
     return (llm_result, ocred_pdf_list)
 
-def send_to_vectordb(llm_result: list[list[str]], ocred_pdf_list: list[str]):
+def send_to_db(llm_result: list[list[str]], ocred_pdf_list: list[str]):
     con = sql.connect(preference.db_path)
     cur = con.cursor()
-    query = """"""
+    insert_query = "insert into qsource (qstr, pid) values (? ,?);"
+    get_pid_query = "select pid from psource where pfile_path = ?;"
+    
+    pid: list[int] = []
+    for i in ocred_pdf_list:
+        pid += cur.execute(get_pid_query, (i,)).fetchall()
+    for (idx, i) in enumerate(llm_result):
+        for j in i:
+            cur.execute(insert_query, (j, pid[idx]))
+    con.commit()
+    
+    get_qid_query = "select qid from qsource where qstr = ?;"
 
+    from llama_cpp import Llama
     import chromadb
 
     client = chromadb.PersistentClient(preference.setting_dict["vcdb_path"]+"/embed.db")
     collection = client.get_or_create_collection(
-        name="collection"
+        name="questions"
     )
+    embed_model = Llama(model_path=preference.setting_dict["embed_model_path"], embedding=True)
+
+    for i in llm_result:
+        for j in i:
+            pass

@@ -1,5 +1,6 @@
 {
-    "model_path": "./models",
+    "model_path": "./models/{Your GGUF llm model here}",
+    "embed_model_path": "./models/{Your GGUF embeddings model here}",
     "pfile_target_path": "./db/papers",
     "db_path": "./db",
     "vcdb_path": "./db",

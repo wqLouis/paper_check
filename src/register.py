@@ -184,21 +184,3 @@ def register_extract_format(file: str) -> PastPaper:
         past_paper.ptype = para[2]
 
     return past_paper
-
-def register_question(questions: list[str], pname: str):
-    
-    con: sql.Connection = sql.connect(f"{preference.db_path}/past_paper.db")
-    cur: sql.Cursor = con.cursor()
-    
-    query: str ="""
-                select pid from psource
-                where pname = ?;
-                """
-
-    pid:int = cur.execute(query, (pname,)).fetchone()[0] # fetch the pid of pname
-
-    con.close()
-
-    import src.main_utils as main_utils
-
-    main_utils.examine(data=questions, pid=pid)

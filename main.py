@@ -3,7 +3,7 @@ import os
 import glob
 import src.core as core
 import src.register as register
-import src.main_utils as main_utils
+import analysis as analysis
 from src.core import unwrap
 from src.core import preference
 from src.core import pattributes
@@ -43,7 +43,7 @@ def main(page: ft.Page) -> None:
             if len(result[1]) == 0 or len(result[0][0]) == 0:
                 for (idx,i) in enumerate(result[0]):
                     for j in i:
-                        matched[idx].append(unwrap(main_utils.analysis(j)))
+                        matched[idx].append(unwrap(analysis.analysis(j, pids=None))) # TODO: Add pid filtering
                     matched.append([])
                     
 
@@ -354,8 +354,7 @@ def main(page: ft.Page) -> None:
                 page=page,
                 btn=preprocess_btn,
             ) or ([], [])
-            for idx, i in enumerate(result[0]):
-                unwrap(main_utils.examine(i, int(result[1][idx])))
+            preprocess.send_to_db(result[0], result[1])
             ocr_progress_bar.value = 0
             preprocess_btn.disabled = False
 

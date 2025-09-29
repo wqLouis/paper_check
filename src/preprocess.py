@@ -7,10 +7,6 @@ import src.core as core
 import src.ocr as ocr
 from src.core import preference
 from src.core import pattributes
-from src.main_utils import load_model
-
-# from llama_cpp import Llama
-
 
 def get_data_from_psource(
     pyear: int | None,
@@ -381,12 +377,12 @@ def send_to_db(llm_result: list[list[str]], ocred_pdf_list: list[str]):
     insert_query = "insert into qsource (qstr, pid) values (? ,?);"
     get_pid_query = "select pid from psource where pfile_path = ?;"
     
-    pid: list[int] = []
-    for i in ocred_pdf_list:
-        pid += cur.execute(get_pid_query, (i,)).fetchall()
+    pid: list[int] = cur.executemany(get_pid_query, ocred_pdf_list).fetchall()
+    
     for (idx, i) in enumerate(llm_result):
         for j in i:
             cur.execute(insert_query, (j, pid[idx]))
+    
     con.commit()
     
     get_qid_query = "select qid from qsource where qstr = ?;"
@@ -400,6 +396,10 @@ def send_to_db(llm_result: list[list[str]], ocred_pdf_list: list[str]):
     )
     embed_model = Llama(model_path=preference.setting_dict["embed_model_path"], embedding=True)
 
+    import numpy as np
+
     for i in llm_result:
-        for j in i:
-            pass
+        embeddings = np.array(embed_model.embed(input=i))
+        collection.add(ids=cur.executemany(get_qid_query, i).fetchall(), embeddings=embeddings, metadatas=[{"pid": i} for i in pid])
+    
+    return

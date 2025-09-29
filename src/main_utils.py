@@ -62,7 +62,6 @@ def analysis(input: str) -> Exception | str:
     """
 
     model: Llama = unwrap(load_model(model_path))
-    _ = model  # Prevent unused variable error
 
     import chromadb
 
@@ -75,6 +74,6 @@ def analysis(input: str) -> Exception | str:
     # TODO: connect to sqlite and get the question text
     con = sql.Connection(preference.db_path)
     cur = con.cursor()
-    cur.execute("")
+    cur.execute("""""")
 
     return Exception("Uncomplete function")

@@ -3,6 +3,7 @@ import sqlite3 as sql
 import os
 import json
 import glob
+import src.core as core
 import src.ocr as ocr
 from src.core import preference
 from src.core import pattributes
@@ -34,8 +35,6 @@ def get_data_from_psource(
         con: sql.Connection = sql.connect(f"{preference.db_path}/past_papers.db")
     except sql.OperationalError as e:
         try:
-            import src.core as core
-
             con: sql.Connection = core.unwrap(core.init_db())
         except:
             print("Tried to connect and create db failed...")
@@ -49,19 +48,44 @@ def get_data_from_psource(
     """
 
     cur: sql.Cursor = con.cursor()
-    db_data = cur.execute(
-        query,
-        (
-            pyear,
-            pyear,
-            psbj,
-            psbj,
-            ptype,
-            ptype,
-            items_per_page,
-            page_num * items_per_page,
-        ),
-    ).fetchall()
+    try:
+        db_data = cur.execute(
+            query,
+            (
+                pyear,
+                pyear,
+                psbj,
+                psbj,
+                ptype,
+                ptype,
+                items_per_page,
+                page_num * items_per_page,
+            ),
+        ).fetchall()
+    except sql.OperationalError as e:
+        print("Table not found\nTry to init table")
+        con = core.unwrap(core.init_db())
+        cur = con.cursor()
+        try:
+            db_data = cur.execute(
+                query,
+                (
+                    pyear,
+                    pyear,
+                    psbj,
+                    psbj,
+                    ptype,
+                    ptype,
+                    items_per_page,
+                    page_num * items_per_page,
+                ),
+            ).fetchall()
+        except BaseException as e:
+            print("failed to get data from psource")
+            con.close()
+            return []
+
+    con.close()
 
     data_rows: list[ft.DataRow] = []
 
@@ -173,7 +197,7 @@ def send_to_preprocess(
     if len(selected_papers["path"]) == 0:
         return
 
-    ocred_pdf_list = [
+    ocred_pdf_list: list[str] = [
         os.path.splitext(os.path.basename(i))[0]
         for i in glob.glob(f"{preference.setting_dict["temp_path"]}/*.json")
     ]
@@ -321,7 +345,16 @@ def send_to_preprocess(
             while True:
                 llm_raw_result = str(
                     llm.create_chat_completion(
-                        messages=[{"role": "user", "content": chunked}]
+                        messages=[{"role": "user", "content": chunked}],
+                        response_format={
+                            "type": "json_object",
+                            "schema": {
+                                "type" : "array",
+                                "items" : {
+                                    "type" : "string"
+                                }
+                            }
+                        }
                     )
                 )
                 try:
@@ -341,3 +374,15 @@ def send_to_preprocess(
             llm_result.append([])
 
     return (llm_result, ocred_pdf_list)
+
+def send_to_vectordb(llm_result: list[list[str]], ocred_pdf_list: list[str]):
+    con = sql.connect(preference.db_path)
+    cur = con.cursor()
+    query = """"""
+
+    import chromadb
+
+    client = chromadb.PersistentClient(preference.setting_dict["vcdb_path"]+"/embed.db")
+    collection = client.get_or_create_collection(
+        name="collection"
+    )

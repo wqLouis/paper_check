@@ -29,10 +29,9 @@ class preference:
         if text_field.value is None:
             return False
 
-        if os.path.isdir(unwrap_str(text_field.value)):
+        if os.path.isdir(text_field.value or ""):
             try:
-                self.setting_dict[text_field.label] = unwrap_str(
-                    text_field.value)
+                self.setting_dict[text_field.label] = text_field.value or ""
                 text_field.error_text = None
             except KeyError:
                 return False
@@ -152,21 +151,8 @@ def init_db() -> Exception | sql.Connection:
 
         return con
     except Exception as e:
+        con.close()
         return e
-
-
-def unwrap_str(String: str | None) -> str:
-    """
-    Takes in var with type str or None and return only str
-
-    Args:
-        String: Input str
-    Returns:
-        If String is None then returns "" else return String itself
-    """
-
-    return String if String is not None else ""
-
 
 def sync_preference() -> None:
     preference.model_path = preference.setting_dict["model_path"]

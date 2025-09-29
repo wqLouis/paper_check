@@ -5,7 +5,6 @@ import src.core as core
 import src.register as register
 import src.main_utils as main_utils
 from src.core import unwrap
-from src.core import unwrap_str
 from src.core import preference
 from src.core import pattributes
 
@@ -39,12 +38,14 @@ def main(page: ft.Page) -> None:
             import src.preprocess as preprocess
             result: tuple[list[list[str]], list[str]] = preprocess.send_to_preprocess(datatable=file_path, progress_bar=None, page=page, btn=upload_btn) or ([[]], [])
             
-            # TODO: Check simularity with main_utils.analysis (Which is not done)
+            # TODO: Check simularity with main_utils.analysis
             matched: list[list[str]] = [[]]
             if len(result[1]) == 0 or len(result[0][0]) == 0:
                 for (idx,i) in enumerate(result[0]):
                     for j in i:
                         matched[idx].append(unwrap(main_utils.analysis(j)))
+                    matched.append([])
+                    
 
         upload_btn: ft.ElevatedButton = ft.ElevatedButton(
             text="Upload",
@@ -81,8 +82,8 @@ def main(page: ft.Page) -> None:
                 and os.path.isfile(file_path[0].path)
             ):
                 selected_path.value = (
-                    unwrap_str(dir_path)
-                    if unwrap_str(dir_path) != ""
+                    (dir_path or "")
+                    if (dir_path or "") != ""
                     else file_path[0].path if file_path is not None else ""
                 )
                 register_input_module.update()
@@ -90,8 +91,8 @@ def main(page: ft.Page) -> None:
                 return
             else:
                 error_message.value = "Error on opening file:" + (
-                    unwrap_str(dir_path)
-                    if unwrap_str(dir_path) != ""
+                    (dir_path or "")
+                    if (dir_path or "") != ""
                     else file_path[0].path if file_path is not None else ""
                 )
 
@@ -186,7 +187,7 @@ def main(page: ft.Page) -> None:
 
         def submit(event: ft.ControlEvent) -> None:
             if mode_select.value == True:
-                path: str = unwrap_str(selected_path.value)
+                path: str = (selected_path.value or "")
 
                 unwrap(
                     register.auto_register_with_folder(
@@ -194,16 +195,16 @@ def main(page: ft.Page) -> None:
                     )
                 )
             elif mode_select.value == False:
-                path: str = unwrap_str(selected_path.value)
+                path: str = (selected_path.value or "")
 
                 result: str | Exception = register.register_papers(
                     pfile_path=path,
-                    pyear=int(unwrap_str(input_row[0].value)),
-                    psbj=unwrap_str(input_row[1].value),
-                    ptype=unwrap_str(input_row[2].value),
+                    pyear=int((input_row[0].value or "")),
+                    psbj=(input_row[1].value or ""),
+                    ptype=(input_row[2].value or ""),
                 )
 
-                log_text.value = unwrap_str(log_text.value)
+                log_text.value = (log_text.value or "")
                 log_text.value += f">{path}"
 
                 if str(result) == "":
@@ -316,7 +317,7 @@ def main(page: ft.Page) -> None:
                 if preference_class.check_dir_valid(text_field=i, page=page) == False:
                     status_text.value = "Error on save"
 
-            if unwrap_str(status_text.value) == "Saved!":
+            if (status_text.value or "") == "Saved!":
                 preference_class.save_on_disk()
 
             page.open(ft.AlertDialog(modal=False, title=status_text))
@@ -371,11 +372,11 @@ def main(page: ft.Page) -> None:
                     continue
                 if isinstance(i, ft.TextField):
                     if i.value != "":
-                        if (unwrap_str(i.value)).isdigit():
+                        if (i.value or "").isdigit():
                             if i.label == "From year":
-                                query_dict["year"].append(int(unwrap_str(i.value)))
+                                query_dict["year"].append(int(i.value or ""))
                             if i.label == "To year":
-                                query_dict["year"].append(int(unwrap_str(i.value)))
+                                query_dict["year"].append(int(i.value or ""))
                         else:
                             i.error_text = "Not digit"
 

@@ -7,7 +7,6 @@ import flet as ft
 import hashlib
 from src.core import init_db
 from src.core import unwrap
-from src.core import unwrap_str
 from src.core import preference
 from src.core import pattributes
 
@@ -115,7 +114,7 @@ def auto_register_with_folder(
     Returns:
         None
     """
-    log.value = unwrap_str(log.value)
+    log.value = log.value or ""
 
     file_list: list[str] = glob.glob(path + "\\*.pdf") + glob.glob(path + "\\*.docx")
     unmatch_list: list[str] = []  # currently unused

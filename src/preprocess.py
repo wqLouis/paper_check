@@ -137,8 +137,7 @@ def send_to_preprocess(
     datatable: ft.DataTable | list[str],
     progress_bar: ft.ProgressBar | None,
     page: ft.Page,
-    btn: ft.ElevatedButton,
-    model_name: str = "Qwen3-8B-Q5_0.gguf",
+    btn: ft.ElevatedButton
 ) -> tuple[list[list[str]], list[str]] | None:
     """
     Preprocess the past paper throgh a pipeline:

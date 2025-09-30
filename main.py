@@ -3,7 +3,7 @@ import os
 import glob
 import src.core as core
 import src.register as register
-import analysis as analysis
+import src.analysis as analysis
 from src.core import unwrap
 from src.core import preference
 from src.core import pattributes
@@ -39,13 +39,13 @@ def main(page: ft.Page) -> None:
             result: tuple[list[list[str]], list[str]] = preprocess.send_to_preprocess(datatable=file_path, progress_bar=None, page=page, btn=upload_btn) or ([[]], [])
             
             # TODO: Check simularity with main_utils.analysis
-            matched: list[list[str]] = [[]]
             if len(result[1]) == 0 or len(result[0][0]) == 0:
                 for (idx,i) in enumerate(result[0]):
                     for j in i:
-                        matched[idx].append(unwrap(analysis.analysis(j, pids=None))) # TODO: Add pid filtering
+                        matched[idx] += (unwrap(analysis.analysis(j, pids=None))) # TODO: Add pid filtering
                     matched.append([])
-                    
+        
+        matched: list[list[str]] = [[]]            
 
         upload_btn: ft.ElevatedButton = ft.ElevatedButton(
             text="Upload",
@@ -54,11 +54,20 @@ def main(page: ft.Page) -> None:
                 dialog_title="Select past paper"
             ),
         )
+        
+        result_txt: ft.Text = ft.Text(
+            value="Results:"
+        )
+
+        result_table: list[ft.DataTable] = [ft.DataTable(rows=analysis.construct_table_with_result(i), columns=[ft.DataColumn(label=ft.Text("qid")), ft.DataColumn(label=ft.Text("qstr")), ft.DataColumn(label=ft.Text("pid"))]) for i in matched]
+
+        # TODO: Create a scrollable container and a button for dropdown showing the result table for each question
+
         file_picker: ft.FilePicker = ft.FilePicker(on_result=file_selected)
         page.overlay.append(file_picker)
         page.update()
 
-        content_area.controls += [upload_btn]
+        content_area.controls += [upload_btn, result_txt]
         content_area.update()
 
     def register_page(event: ft.ControlEvent) -> None:

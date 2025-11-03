@@ -33,7 +33,7 @@ def get_data_from_psource(
         try:
             con: sql.Connection = core.unwrap(core.init_db())
         except:
-            print("Tried to connect and create db failed...")
+            raise Exception("Tried to connect and create db failed...")
 
     query: str = """
     select * from psource
@@ -376,7 +376,7 @@ def send_to_db(llm_result: list[list[str]], ocred_pdf_list: list[str]):
     insert_query = "insert into qsource (qstr, pid) values (? ,?);"
     get_pid_query = "select pid from psource where pfile_path = ?;"
     
-    pid: list[int] = cur.executemany(get_pid_query, ocred_pdf_list).fetchall()
+    pid: list[int] = [int(cur.execute(get_pid_query, i).fetchone()) for i in ocred_pdf_list]
     
     for (idx, i) in enumerate(llm_result):
         for j in i:
@@ -385,6 +385,10 @@ def send_to_db(llm_result: list[list[str]], ocred_pdf_list: list[str]):
     con.commit()
     
     get_qid_query = "select qid from qsource where qstr = ?;"
+
+    if not os.path.exists(preference.model_path):
+        print(f"{preference.model_path}Failed to locate LLM model, check settings")
+        return
 
     from llama_cpp import Llama
     import chromadb

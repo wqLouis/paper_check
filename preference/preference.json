@@ -1,8 +1,8 @@
 {
-    "model_path": "./models/{Your GGUF llm model here}",
-    "embed_model_path": "./models/{Your GGUF embeddings model here}",
+    "model_path": "./models/llm/{Your llm here}",
+    "embed_model_path": "./models/embeddings/{Your embeddings here}",
     "pfile_target_path": "./db/papers",
-    "db_path": "./db",
+    "db_path": "./db/past_papers.db",
     "vcdb_path": "./db",
     "ocr_path": "./models/ocr",
     "temp_path": "./db/temp",

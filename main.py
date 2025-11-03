@@ -44,13 +44,15 @@ def main(page: ft.Page) -> None:
                     for j in i:
                         matched[idx] += (unwrap(analysis.analysis(j, pids=None))) # TODO: Add pid filtering
                     matched.append([])
+            print(result)
         
         matched: list[list[str]] = [[]]            
 
         upload_btn: ft.ElevatedButton = ft.ElevatedButton(
             text="Upload",
             icon=ft.Icons.UPLOAD,
-            on_click=lambda _: file_picker.get_directory_path(
+            on_click=lambda _: file_picker.pick_files(
+                allow_multiple=False,
                 dialog_title="Select past paper"
             ),
         )

@@ -29,7 +29,7 @@ class preference:
         if text_field.value is None:
             return False
 
-        if os.path.isdir(text_field.value or ""):
+        if os.path.isdir(text_field.value or "") or os.path.exists(text_field.value or "") or text_field.value == "DEBUG":
             try:
                 self.setting_dict[text_field.label] = text_field.value or ""
                 text_field.error_text = None
@@ -60,6 +60,7 @@ class preference:
             f"{self.setting_dict["preference_path"]}/preference.json", mode="w"
         ) as f:
             json.dump(self.setting_dict, f, indent=4)
+        load() # Sync new preference
 
 
 class pattributes:
@@ -114,7 +115,7 @@ def init_db() -> Exception | sql.Connection:
         except Exception as e:
             return e
 
-    con: sql.Connection = sql.connect(preference.db_path + "/past_papers.db")
+    con: sql.Connection = sql.connect(preference.db_path)
     cur: sql.Cursor = con.cursor()
 
     table_count: int = int(
@@ -161,10 +162,13 @@ def sync_preference() -> None:
     preference.ocr_model = preference.setting_dict["ocr_path"]
 
 
-# load and sync preference
-if os.path.exists(f"{preference.setting_dict["preference_path"]}/preference.json"):
-    with open(
-        f"{preference.setting_dict["preference_path"]}/preference.json", mode="r"
-    ) as f:
-        preference.setting_dict = json.load(f)
-    sync_preference()
+def load():
+    if os.path.exists(f"{preference.setting_dict["preference_path"]}/preference.json"):
+        with open(
+            f"{preference.setting_dict["preference_path"]}/preference.json", mode="r"
+        ) as f:
+            preference.setting_dict = json.load(f)
+        sync_preference()
+
+
+load()

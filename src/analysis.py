@@ -35,7 +35,7 @@ def construct_table_with_result(ids: list[str]) -> list[ft.DataRow]:
     cur = con.cursor()
     query = "select * from qsource where qid = ?;"
 
-    query_result = cur.executemany(query, ids).fetchall()
+    query_result = [cur.execute(query, i).fetchone() for i in ids]
     row = [ft.DataRow(cells=[])]
 
     for i in query_result:

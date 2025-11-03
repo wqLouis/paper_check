@@ -20,3 +20,4 @@ testing
 db/papers/*
 db/temp/*
 db/past_papers.db
+db/embed.db/*

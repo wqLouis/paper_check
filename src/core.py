@@ -103,7 +103,7 @@ def init_db() -> Exception | sql.Connection:
     Initialize sqlite database with basic structures
     """
 
-    if not os.path.exists(preference.db_path):
+    if not os.path.exists(os.path.dirname(preference.db_path)):
         try:
             os.mkdir(preference.db_path)
         except Exception as e:

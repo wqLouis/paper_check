@@ -1,6 +1,7 @@
 import rapidocr
 import numpy as np
 import flet as ft
+import os
 from pdf2image import convert_from_path
 from PIL import Image
 from src.core import preference
@@ -17,6 +18,11 @@ def pdf_ocr(path: str, page_progress_bar: ft.ProgressBar, page: ft.Page, btn: ft
     """
     pdf: list[Image.Image] = convert_from_path(pdf_path=path)
     text: list[str] = []
+
+    if not os.path.exists(f"{preference.ocr_model}/ch_PP-OCRv5_mobile_det.onnx"):
+        raise Exception("det model not found. You should have a ch_PP-OCRv5_mobile_det.onnx file")
+    if not os.path.exists(f"{preference.ocr_model}/ch_PP-OCRv5_rec_mobile_infer.onnx"):
+        raise Exception("rec model not found. You should have a ch_PP-OCRv5_rec_mobile_infer.onnx file")
 
     engine: rapidocr.RapidOCR = rapidocr.RapidOCR(params={
         "Det.model_path" : f"{preference.ocr_model}/ch_PP-OCRv5_mobile_det.onnx",

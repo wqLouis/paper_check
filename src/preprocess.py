@@ -28,7 +28,7 @@ def get_data_from_psource(
     """
 
     try:
-        con: sql.Connection = sql.connect(f"{preference.db_path}/past_papers.db")
+        con: sql.Connection = sql.connect(f"{preference.db_path}")
     except sql.OperationalError as e:
         try:
             con: sql.Connection = core.unwrap(core.init_db())
@@ -138,7 +138,7 @@ def send_to_preprocess(
     progress_bar: ft.ProgressBar | None,
     page: ft.Page,
     btn: ft.ElevatedButton
-) -> tuple[list[list[str]], list[str]] | None:
+) -> tuple[list[list[str]], list[str]]:
     """
     Preprocess the past paper throgh a pipeline:
     Fetch pdf -> OCR -> LLM filter unwanted text -> Embeddings -> Insert questions into DB
@@ -189,13 +189,15 @@ def send_to_preprocess(
                     selected_papers["type"] = parsed_papers[2]
                     selected_papers["path"] = datatable[idx]
 
+    print(f"Selected paper: {selected_papers}")
     if len(selected_papers["path"]) == 0:
-        return
+        return ([],[])
 
     ocred_pdf_list: list[str] = [
         os.path.splitext(os.path.basename(i))[0]
         for i in glob.glob(f"{preference.setting_dict["temp_path"]}/*.json")
     ]
+    print(f"found ocred pdf: {ocred_pdf_list}")
 
     for i in selected_papers["path"]:
         if os.path.splitext(os.path.basename(i))[0] in ocred_pdf_list:
@@ -217,7 +219,8 @@ def send_to_preprocess(
     ocred_pdf_list = glob.glob(f"{preference.setting_dict["temp_path"]}/*.json")
 
     if len(ocred_pdf_list) == 0:
-        return
+        print("No ocred pdf found exiting preprocess...")
+        return ([],[])
 
     con: sql.Connection = sql.connect(f"{preference.db_path}/past_paper.db")
     cur: sql.Cursor = con.cursor()
@@ -238,7 +241,7 @@ def send_to_preprocess(
             model_path=preference.model_path, verbose=False
         )
     else:
-        return
+        raise Exception("llm model not found")
 
     os.mkdir(f"{preference.setting_dict["temp_path"]}/filtered")
 
@@ -332,7 +335,7 @@ def send_to_preprocess(
         with open(file=i, mode="r") as f:
             json_str: str = str(json.load(f))
         if len(json_str) <= 0:
-            return
+            return ([],[])
         ptr: int = 0
         failed_count: int = 0
         while True:
@@ -370,18 +373,21 @@ def send_to_preprocess(
 
     return (llm_result, ocred_pdf_list)
 
-def send_to_db(llm_result: list[list[str]], ocred_pdf_list: list[str]):
+def send_to_db(llm_result: list[list[str]], ocred_pdf_list: list[str], log: ft.Text):
     con = sql.connect(preference.db_path)
     cur = con.cursor()
     insert_query = "insert into qsource (qstr, pid) values (? ,?);"
     get_pid_query = "select pid from psource where pfile_path = ?;"
+    
+    log.value = log.value or "" + "\ninserting into db"
+    log.update()
     
     pid: list[int] = [int(cur.execute(get_pid_query, i).fetchone()) for i in ocred_pdf_list]
     
     for (idx, i) in enumerate(llm_result):
         for j in i:
             cur.execute(insert_query, (j, pid[idx]))
-    
+            log.value = log.value or "" + f"\ninsert into db with val: {j}"
     con.commit()
     
     get_qid_query = "select qid from qsource where qstr = ?;"
@@ -390,19 +396,25 @@ def send_to_db(llm_result: list[list[str]], ocred_pdf_list: list[str]):
         print(f"{preference.model_path}Failed to locate LLM model, check settings")
         return
 
+    log.value = log.value or "" + "\nloading llama_cpp and chromadb"
+    log.update()
     from llama_cpp import Llama
     import chromadb
 
+    log.value = log.value or "" + "\nconnecting vector db"
     client = chromadb.PersistentClient(preference.setting_dict["vcdb_path"]+"/embed.db")
     collection = client.get_or_create_collection(
         name="questions"
     )
+    log.value = log.value or "" + f"\nloading embed_model with path: {preference.setting_dict["embed_model_path"]}"
+    log.update()
     embed_model = Llama(model_path=preference.setting_dict["embed_model_path"], embedding=True)
 
     import numpy as np
 
     for i in llm_result:
         embeddings = np.array(embed_model.embed(input=i))
+        print(embeddings)
         collection.add(ids=cur.executemany(get_qid_query, i).fetchall(), embeddings=embeddings, metadatas=[{"pid": i} for i in pid])
     
     return

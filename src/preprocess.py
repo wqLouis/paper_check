@@ -29,10 +29,8 @@ def get_data_from_psource(
 
     try:
         con: sql.Connection = sql.connect(f"{preference.db_path}")
-    except sql.OperationalError as e:
-        con = core.init_db()
-        if con is not sql.Connection:
-            raise con
+    except sql.OperationalError:
+        con = core.unwrap(core.init_db())
 
     query: str = """
     select * from psource
@@ -162,21 +160,21 @@ def send_to_preprocess(
     if progress_bar is None:
         progress_bar = ft.ProgressBar()  # dummy bar
 
-    if datatable is ft.DataTable and datatable.rows is not None:
+    if isinstance(datatable, ft.DataTable) and datatable.rows is not None:
         print("datatable found as flet datatable structure")
         for i in datatable.rows:
             selected: bool = False
             for (j, cell) in enumerate(i.cells):
-                selected = True if j == 0 and cell.content.value == True else selected
+                selected = True if j == 0 and cell.content.value == True else selected # type: ignore
                 if selected:
                     if j == 1:
-                        selected_papers["year"].append(cell.content.value)
+                        selected_papers["year"].append(cell.content.value) # type: ignore
                     elif j == 2:
-                        selected_papers["sbj"].append(cell.content.value)
+                        selected_papers["sbj"].append(cell.content.value) # type: ignore
                     elif j == 3:
-                        selected_papers["type"].append(cell.content.value)
+                        selected_papers["type"].append(cell.content.value) # type: ignore
                     elif j == 4:
-                        selected_papers["path"].append(cell.content.spans[0].url)
+                        selected_papers["path"].append(cell.content.spans[0].url) # type: ignore
     elif datatable is list[str]:
         print("datatable found as list[str] structure")
         datatable_filename: list[str] = [os.path.basename(i) for i in datatable]
@@ -225,7 +223,7 @@ def send_to_preprocess(
         print("No ocred pdf found exiting preprocess...")
         return ([],[])
 
-    con: sql.Connection = sql.connect(f"{preference.db_path}/past_paper.db")
+    con: sql.Connection = sql.connect(f"{preference.db_path}")
     cur: sql.Cursor = con.cursor()
     pid_list: list[int] = []
 
@@ -234,19 +232,23 @@ def send_to_preprocess(
             int(
                 cur.execute(
                     "select pid from psource where pfile_path like ?",
-                    f"%{os.path.splitext(os.path.basename(i))[0]}%",
+                    (f"%{os.path.splitext(os.path.basename(i))[0]}%", ),
                 ).fetchone()[0]
             )
         )
 
     if os.path.exists(preference.model_path):
+        print("loading llm model")
         llm: Llama = Llama(
-            model_path=preference.model_path, verbose=False
+            model_path=preference.model_path, verbose=False, n_ctx=2048
         )
     else:
         raise Exception("llm model not found")
 
-    os.mkdir(f"{preference.setting_dict["temp_path"]}/filtered")
+    try:
+        os.mkdir(f"{preference.setting_dict["temp_path"]}/filtered")
+    except BaseException:
+        pass
 
     sys_prompt: str = """
                         You are an AI responsible for preprocessing OCR-extracted text from exam papers for use in embedding models. You will receive a **list of strings**, where each string represents a line (or text block) from the OCR result.
@@ -320,7 +322,7 @@ def send_to_preprocess(
         ) as f:
             sbj_prompt: dict = json.load(f)
 
-    llm.create_chat_completion(messages=[{"role": "system", "content": sys_prompt}])
+    # llm.create_chat_completion(messages=[{"role": "system", "content": sys_prompt}])
 
     chunk_size: int = 10
     iteration_len: int = 5
@@ -330,10 +332,7 @@ def send_to_preprocess(
         # Parse file name and use sbj_prompt
         if i.split("_")[1] in sbj_prompt:
             print(f"found subject specific prompt: {sbj_prompt[i.split("_")[1]]}")
-            llm.reset()
-            llm.create_chat_completion(
-                messages=[{"role": "system", "content": sbj_prompt[i.split("_")[1]]}]
-            )
+            sys_prompt = sbj_prompt[i.split("_")[1]]
 
         with open(file=i, mode="r") as f:
             json_str: str = str(json.load(f))
@@ -342,11 +341,12 @@ def send_to_preprocess(
         ptr: int = 0
         failed_count: int = 0
         while True:
-            chunked: str = json_str[ptr : min(ptr + chunk_size, len(json_str) - 1)]
+            chunked: str = json_str[ptr : min(ptr + chunk_size, len(json_str) - 1)] # TODO: chunked incorrectly
             while True:
+                print(chunked)
                 llm_raw_result = str(
                     llm.create_chat_completion(
-                        messages=[{"role": "user", "content": chunked}],
+                        messages=[{"role": "user", "content": f"{sys_prompt}\n{chunked}"}],
                         response_format={
                             "type": "json_object",
                             "schema": {
@@ -358,6 +358,7 @@ def send_to_preprocess(
                         }
                     )
                 )
+                print(llm_raw_result)
                 try:
                     llm_result[-1] += json.loads(llm_raw_result)
                 except ValueError:
@@ -376,41 +377,38 @@ def send_to_preprocess(
 
     return (llm_result, ocred_pdf_list)
 
-def send_to_db(llm_result: list[list[str]], ocred_pdf_list: list[str], log: ft.Text):
+def send_to_db(llm_result: list[list[str]], ocred_pdf_list: list[str]):
     con = sql.connect(preference.db_path)
     cur = con.cursor()
     insert_query = "insert into qsource (qstr, pid) values (? ,?);"
     get_pid_query = "select pid from psource where pfile_path = ?;"
     
-    log.value = log.value or "" + "\ninserting into db"
-    log.update()
+    print("insert into db")
     
     pid: list[int] = [int(cur.execute(get_pid_query, i).fetchone()) for i in ocred_pdf_list]
     
     for (idx, i) in enumerate(llm_result):
         for j in i:
             cur.execute(insert_query, (j, pid[idx]))
-            log.value = log.value or "" + f"\ninsert into db with val: {j}"
+            print(f"\ninsert into db with val: {j}")
     con.commit()
     
     get_qid_query = "select qid from qsource where qstr = ?;"
 
     if not os.path.exists(preference.model_path):
-        print(f"{preference.model_path}Failed to locate LLM model, check settings")
+        print(f"{preference.model_path} Failed to locate LLM model, check settings")
         return
 
-    log.value = log.value or "" + "loading llama_cpp and chromadb\n"
-    log.update()
+    print("loading llama_cpp and chromadb")
     from llama_cpp import Llama
     import chromadb
 
-    log.value = log.value or "" + "connecting vector db\n"
+    print("connect to chromadb")
     client = chromadb.PersistentClient(preference.setting_dict["vcdb_path"]+"/embed.db")
     collection = client.get_or_create_collection(
         name="questions"
     )
-    log.value = log.value or "" + f"loading embed_model with path: {preference.setting_dict["embed_model_path"]}\n"
-    log.update()
+    print(f"loading embed_model with path: {preference.setting_dict["embed_model_path"]}")
     embed_model = Llama(model_path=preference.setting_dict["embed_model_path"], embedding=True)
 
     import numpy as np

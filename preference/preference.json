@@ -1,10 +1,11 @@
 {
-    "model_path": "./models/llm/{Your llm here}",
-    "embed_model_path": "./models/embeddings/{Your embeddings here}",
+    "model_path": "./models/llm/Qwen3-8B-Q5_0.gguf",
+    "embed_model_path": "./models/embeddings/Qwen3-Embedding-4B-Q6_K.gguf",
     "pfile_target_path": "./db/papers",
     "db_path": "./db/past_papers.db",
     "vcdb_path": "./db",
     "ocr_path": "./models/ocr",
     "temp_path": "./db/temp",
-    "preference_path": "./preference"
+    "preference_path": "./preference",
+    "plugins_path": "./plugins"
 }

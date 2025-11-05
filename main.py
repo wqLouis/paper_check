@@ -365,9 +365,15 @@ def main(page: ft.Page) -> None:
                 page=page,
                 btn=preprocess_btn,
             ) # ISSUE: this shit always return ([],[]) :(
-            log.value = log.value or "" + "send_to_db\n"
-            print(result)
-            preprocess.send_to_db(result[0], result[1], log=log)
+            
+            if result == ([],[]):
+                preprocess_btn.disabled = False
+                ocr_progress_bar.value = 0
+                content_area.update()
+                return
+            
+            print("send to db\n",result)
+            preprocess.send_to_db(result[0], result[1])
             ocr_progress_bar.value = 0
             preprocess_btn.disabled = False
 
@@ -503,9 +509,6 @@ def main(page: ft.Page) -> None:
         )
         past_paper_table.width = page.width
 
-        log = ft.Text(value="")
-        log.value = log.value or "" + f"{past_paper_table.rows}"
-
         content_area.controls.append(input_module)
         content_area.controls.append(ft.Divider())
         content_area.controls.append(
@@ -515,7 +518,6 @@ def main(page: ft.Page) -> None:
         )
         content_area.controls.append(bottom_input_module)
         content_area.controls.append(ocr_progress_bar)
-        content_area.controls.append(log)
         content_area.update()
 
     def theme_mode_switch(event: ft.ControlEvent) -> None:

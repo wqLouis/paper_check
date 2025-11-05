@@ -16,7 +16,8 @@ class preference:
     ocr_model: str = "./models/ocr"
 
     setting_dict: dict = {  # Will be used to replace original preference
-        "model_path": "./models",
+        "model_path": "./models/llm/",
+        "embed_model_path": "./models/embeddings/",
         "pfile_target_path": "./db/papers",
         "db_path": "./db",
         "ocr_path": "./models/ocr",

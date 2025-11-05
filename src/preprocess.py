@@ -30,10 +30,9 @@ def get_data_from_psource(
     try:
         con: sql.Connection = sql.connect(f"{preference.db_path}")
     except sql.OperationalError as e:
-        try:
-            con: sql.Connection = core.unwrap(core.init_db())
-        except:
-            raise Exception("Tried to connect and create db failed...")
+        con = core.init_db()
+        if con is not sql.Connection:
+            raise con
 
     query: str = """
     select * from psource
@@ -156,6 +155,7 @@ def send_to_preprocess(
     """
 
     from llama_cpp import Llama
+    print("llama_cpp loaded")
 
     selected_papers: dict = {"year": [], "sbj": [], "type": [], "path": []}
 
@@ -163,9 +163,10 @@ def send_to_preprocess(
         progress_bar = ft.ProgressBar()  # dummy bar
 
     if datatable is ft.DataTable and datatable.rows is not None:
+        print("datatable found as flet datatable structure")
         for i in datatable.rows:
             selected: bool = False
-            for j, cell in enumerate(i.cells):
+            for (j, cell) in enumerate(i.cells):
                 selected = True if j == 0 and cell.content.value == True else selected
                 if selected:
                     if j == 1:
@@ -177,6 +178,7 @@ def send_to_preprocess(
                     elif j == 4:
                         selected_papers["path"].append(cell.content.spans[0].url)
     elif datatable is list[str]:
+        print("datatable found as list[str] structure")
         datatable_filename: list[str] = [os.path.basename(i) for i in datatable]
         for idx, i in enumerate(datatable_filename):
             if not os.path.exists(i):
@@ -191,6 +193,7 @@ def send_to_preprocess(
 
     print(f"Selected paper: {selected_papers}")
     if len(selected_papers["path"]) == 0:
+        print("no selected paper exiting...")
         return ([],[])
 
     ocred_pdf_list: list[str] = [
@@ -396,17 +399,17 @@ def send_to_db(llm_result: list[list[str]], ocred_pdf_list: list[str], log: ft.T
         print(f"{preference.model_path}Failed to locate LLM model, check settings")
         return
 
-    log.value = log.value or "" + "\nloading llama_cpp and chromadb"
+    log.value = log.value or "" + "loading llama_cpp and chromadb\n"
     log.update()
     from llama_cpp import Llama
     import chromadb
 
-    log.value = log.value or "" + "\nconnecting vector db"
+    log.value = log.value or "" + "connecting vector db\n"
     client = chromadb.PersistentClient(preference.setting_dict["vcdb_path"]+"/embed.db")
     collection = client.get_or_create_collection(
         name="questions"
     )
-    log.value = log.value or "" + f"\nloading embed_model with path: {preference.setting_dict["embed_model_path"]}"
+    log.value = log.value or "" + f"loading embed_model with path: {preference.setting_dict["embed_model_path"]}\n"
     log.update()
     embed_model = Llama(model_path=preference.setting_dict["embed_model_path"], embedding=True)
 

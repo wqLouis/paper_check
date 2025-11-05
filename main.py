@@ -36,7 +36,7 @@ def main(page: ft.Page) -> None:
                 return
             file_path = [i.path for i in event.files]
             import src.preprocess as preprocess
-            result: tuple[list[list[str]], list[str]] = preprocess.send_to_preprocess(datatable=file_path, progress_bar=None, page=page, btn=upload_btn) or ([[]], [])
+            result: tuple[list[list[str]], list[str]] = preprocess.send_to_preprocess(datatable=file_path, progress_bar=None, page=page, btn=upload_btn)
             
             # TODO: Check simularity with main_utils.analysis
             if len(result[1]) == 0 or len(result[0][0]) == 0:
@@ -364,8 +364,8 @@ def main(page: ft.Page) -> None:
                 progress_bar=ocr_progress_bar,
                 page=page,
                 btn=preprocess_btn,
-            ) # TODO: ISSUE this shit always return ([],[]) :(
-            log.value = log.value or "" + "\nsend_to_db"
+            ) # ISSUE: this shit always return ([],[]) :(
+            log.value = log.value or "" + "send_to_db\n"
             print(result)
             preprocess.send_to_db(result[0], result[1], log=log)
             ocr_progress_bar.value = 0

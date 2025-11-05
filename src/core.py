@@ -103,9 +103,11 @@ def init_db() -> Exception | sql.Connection:
     Initialize sqlite database with basic structures
     """
 
+    print("init db...")
     if not os.path.exists(os.path.dirname(preference.db_path)):
+        print(f"path not found try to create {os.path.dirname(preference.db_path)}")
         try:
-            os.mkdir(preference.db_path)
+            os.mkdir(os.path.dirname(preference.db_path))
         except Exception as e:
             return e
 

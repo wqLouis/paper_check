@@ -57,8 +57,3 @@ paper_check/
 ├── uv.lock                # Dependency lockfile
 └── README.md              # Project documentation
 ```
-
-### Compatibility
-
-This project currently tested under Windows\
-And cannot run perfectly under Linux (Tested on Arch linux)

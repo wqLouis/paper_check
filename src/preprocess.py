@@ -322,11 +322,11 @@ def send_to_preprocess(
         ) as f:
             sbj_prompt: dict = json.load(f)
 
-    # llm.create_chat_completion(messages=[{"role": "system", "content": sys_prompt}])
-
     chunk_size: int = 10
     iteration_len: int = 5
     llm_result: list[list[str]] = []
+
+    # TODO: add open router api support
 
     for i in ocred_pdf_list:
         # Parse file name and use sbj_prompt
@@ -335,13 +335,13 @@ def send_to_preprocess(
             sys_prompt = sbj_prompt[i.split("_")[1]]
 
         with open(file=i, mode="r") as f:
-            json_str: str = str(json.load(f))
+            json_str: list[str] = json.load(f)
         if len(json_str) <= 0:
             return ([],[])
         ptr: int = 0
         failed_count: int = 0
         while True:
-            chunked: str = json_str[ptr : min(ptr + chunk_size, len(json_str) - 1)] # TODO: chunked incorrectly
+            chunked: str = json_str[ptr : min(ptr + chunk_size, len(json_str) - 1)]
             while True:
                 print(chunked)
                 llm_raw_result = str(

@@ -4,39 +4,40 @@ import os
 
 import toml
 
-config: dict = {"ocr_model_path": "", "db_path": "", "page_path": "./src/page/*.py"}
-config_path: str = "~/.config/paper_check.toml"
+config: dict = {"ocr_model_path": "", "db_path": ""}
+fallback_config = config.copy()
+config_path: str = "./config.toml"
+page_path: str = "./src/page/*.py"
 
 
 def get(key: str):
     return config.get(key)
 
 
-def put(key: str, value: str) -> bool:
-    if key.split("_")[-1] == "path":
-        if not os.path.exists(value):
-            return False
-    if key in config:
-        return False
-
-    config[key] = value
-    return True
-
-
 def commit():
-    pass
+    with open(config_path, "w") as f:
+        toml.dump(config, f)
 
 
 # init function
 def init():
+    global config
+
     if not os.path.exists(os.path.dirname(config_path)):
         try:
             os.mkdir(os.path.dirname(config_path))
         except BaseException as e:
             raise e
     if not os.path.exists(config_path):
-        pass  # create file
-    # load to config dict
+        commit()
+
+    try:
+        with open(config_path, "r") as f:
+            config = toml.load(f)
+    except toml.decoder.TomlDecodeError:
+        config = fallback_config
+    except BaseException as e:
+        raise e
 
 
-# init()
+init()

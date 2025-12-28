@@ -26,9 +26,14 @@ class Bar:
 
         pages = [
             "src.page." + os.path.splitext(os.path.basename(i))[0]
-            for i in glob.glob(str(config.get("page_path")))
+            for i in glob.glob(config.page_path)
         ]
         modules = [importlib.import_module(i) for i in pages]
+
+        for i in modules:
+            if getattr(i, "menu_btn") is None or getattr(i, "page_content") is None:
+                modules.remove(i)
+
         menu_btns: list[ft.MenuItemButton] = [
             i() for i in [getattr(i, "menu_btn") for i in modules]
         ]
@@ -40,5 +45,8 @@ class Bar:
             i[0].on_click = i[1]
 
         self.bar.content = ft.Row(
-            controls=[ft.Text("Paper Check"), ft.MenuBar(controls=menu_btns)]
+            controls=[
+                ft.Text("Paper Check"),
+                ft.MenuBar(controls=menu_btns, expand=True),
+            ]
         )

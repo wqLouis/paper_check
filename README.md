@@ -4,21 +4,18 @@
 
 ---
 
-`I will rewrite this entire repo later`\
-This Repo is currently under development, most functions are not working yet <3
-
 ### About this project
 
 This project is designed to analyze academic examination papers for textual similarities, helping educators identify potential plagiarism or repeated content across different papers.
 
 ### Features
 
-- PDF file input ✅
+- PDF file input
 - Text similarity analysis (WIP)
 
 ### Installation
 
-1. Ensure Python 3.10+ is installed
+1. Install uv
 2. Create and activate virtual environment:
 
 ```bash
@@ -36,24 +33,4 @@ uv pip install -e .
 
 ```bash
 flet run ./main.py
-```
-
-Before you analysis:
-Register paper -> OCR and preprocess -> Examine
-
-### Project Structure (Outdated)
-
-```
-paper_check/
-├── main.py                # Entry point
-├── db/                    # Database directory
-├── models/                # Data models
-├── src/
-│   ├── core.py
-│   ├── main_utils.py
-│   ├── register.py
-│   └── xlsx_operations.py
-├── pyproject.toml         # Project configuration
-├── uv.lock                # Dependency lockfile
-└── README.md              # Project documentation
 ```

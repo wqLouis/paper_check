@@ -1,3 +1,5 @@
+"""This load all pages"""
+
 import glob
 import importlib
 import os

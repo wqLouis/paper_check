@@ -11,7 +11,7 @@ def page_content():
         ft.TextField(label=str(key), value=val) for key, val in config.config.items()
     ]
     save_btn = ft.IconButton(icon=ft.Icons.SAVE)
-    reset_btn = ft.IconButton(icon=ft.Icons.RESET_TV)
+    reset_btn = ft.ElevatedButton(text="Reset")
 
     def write_config(_):
         ok = True

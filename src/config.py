@@ -10,10 +10,6 @@ config_path: str = "./config.toml"
 page_path: str = "./src/page/*.py"
 
 
-def get(key: str):
-    return config.get(key)
-
-
 def commit():
     with open(config_path, "w") as f:
         toml.dump(config, f)

@@ -4,7 +4,28 @@ import os
 
 import toml
 
-config: dict = {"ocr_model_path": "", "db_path": ""}
+config: dict = {
+    "ocr_model_path": "",
+    "db_path": "",
+    "forms": ["f1", "f2", "f3", "f4", "f5", "f6"],
+    "subjects": [
+        "chin",
+        "eng",
+        "math",
+        "phy",
+        "chem",
+        "bio",
+        "cs",
+        "econ",
+        "bafs",
+        "ict",
+        "hist",
+        "chist",
+        "clit",
+        "m2",
+    ],
+    "paper_path" : ""
+}
 fallback_config = config.copy()
 config_path: str = "./config.toml"
 page_path: str = "./src/page/*.py"

@@ -16,9 +16,7 @@ def page_content():
     def write_config(_):
         ok = True
         for i in config_textfield:
-            if not (
-                str(i.label).split("_")[-1] == "path" and os.path.exists(str(i.value))
-            ):
+            if str(i.label).split("_")[-1] == "path" and not os.path.exists(str(i.value)):
                 i.error_text = "path not exist"
                 ok = False
         if ok:

@@ -2,11 +2,26 @@ import os
 import shutil
 import sqlite3 as sql
 
-import docx
+import fitz as pdf
 import flet as ft
+import numpy as np
+from paddleocr import PPStructureV3
 
-from main import main_page
 from src.config import config
+
+
+def ocr_to_str(imgs: list[np.ndarray]) -> str:
+    ocr = PPStructureV3()
+    md = []
+
+    for i in imgs:
+        page = ocr.predict(i)
+        for j in page:
+            md.append(j.markdown)
+
+    md = ocr.concatenate_markdown_pages(md)
+
+    return str(md)
 
 
 def page_content():
@@ -50,16 +65,25 @@ def page_content():
                 )
                 > 0
             ):
-                continue
+                continue  # check if repeated
 
             content: str | None = None
             if os.path.splitext(path)[1].lower() in [".doc", ".docx"]:
-                doc = docx.Document(path)
-                content = str([i for i in doc.paragraphs])
-                del doc
+                print("currently not support docx or doc\nFuck you Microsoft :(")
             if os.path.splitext(path)[1].lower() == ".pdf":
-                pass  # pass to ocr to do preprocess
-            if content is None:
+                doc = pdf.open(path)
+                img = [doc.load_page(i).get_pixmap() for i in range(len(doc))]
+                img = [
+                    np.frombuffer(i.samples, dtype=np.uint8).reshape(
+                        i.height, i.width, i.n
+                    )
+                    for i in img
+                ]
+                doc.close()
+                del doc
+                content = ocr_to_str(imgs=img)
+
+            if content is None or content == "":
                 continue
 
             paper_path = config.get("paper_path")
@@ -69,13 +93,16 @@ def page_content():
                 shutil.copy2(path, paper_path + os.path.basename(path))
             except BaseException as err:
                 raise err
-            
+
             query = "INSERT INTO papers (year, form, subject, content, path) VALUES (?, ?, ?, ?, ?);"
             try:
-                cur.execute(query, (file + [content] + [paper_path + os.path.basename(path)]))
+                cur.execute(
+                    query, (file + [content] + [paper_path + os.path.basename(path)])
+                )
             except BaseException as err:
                 raise err
-            
+
+        con.commit()
         con.close()
 
     file_picker = ft.FilePicker(on_result=pick_file_result)
@@ -86,12 +113,9 @@ def page_content():
     log_text = ft.Text("")
     log = ft.Column(controls=[log_text], scroll=ft.ScrollMode.ADAPTIVE)
 
-    if main_page is not None:
-        main_page.overlay.append(file_picker)
-        content_area.controls.append(btn)
-        content_area.controls.append(log)
-    else:
-        raise Exception("No main page")
+    content_area.controls.append(file_picker)
+    content_area.controls.append(btn)
+    content_area.controls.append(log)
 
     return content_area
 

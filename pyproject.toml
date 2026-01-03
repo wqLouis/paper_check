@@ -7,5 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "flet[all]>=0.28.3",
     "flet-cli>=0.28.3",
-    "python-docx>=1.2.0",
+    "paddleocr[doc-parser]>=3.3.2",
+    "pymupdf>=1.26.7",
+    "numpy>=2.4.0",
 ]

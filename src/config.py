@@ -5,26 +5,29 @@ import os
 import toml
 
 config: dict = {
-    "ocr_model_path": "",
-    "db_path": "",
-    "forms": ["f1", "f2", "f3", "f4", "f5", "f6"],
-    "subjects": [
-        "chin",
-        "eng",
-        "math",
-        "phy",
-        "chem",
-        "bio",
-        "cs",
-        "econ",
-        "bafs",
-        "ict",
-        "hist",
-        "chist",
-        "clit",
-        "m2",
-    ],
-    "paper_path" : ""
+    "general": {
+        "ocr_model_path": "",
+        "db_path": "",
+        "forms": ["f1", "f2", "f3", "f4", "f5", "f6"],
+        "subjects": [
+            "chin",
+            "eng",
+            "math",
+            "phy",
+            "chem",
+            "bio",
+            "cs",
+            "econ",
+            "bafs",
+            "ict",
+            "hist",
+            "chist",
+            "clit",
+            "m2",
+        ],
+        "paper_path": "",
+    },
+    "paddle ocr": {"use_gpu?": True},
 }
 fallback_config = config.copy()
 config_path: str = "./config.toml"

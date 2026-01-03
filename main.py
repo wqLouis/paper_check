@@ -7,8 +7,6 @@ main_page: ft.Page | None = None
 
 
 def main(page: ft.Page):
-    global main_page
-    main_page = page
     page.title = "Paper Check"
     page.scroll = ft.ScrollMode.ADAPTIVE
     title_bar = bar.Bar(page=page)

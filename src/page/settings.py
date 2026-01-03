@@ -7,16 +7,24 @@ import src.config as config
 
 def page_content():
     content_area = ft.Column(spacing=24)
-    config_textfield = [
-        ft.TextField(label=str(key), value=val) for key, val in config.config.items()
-    ]
+    config_textfield = []
+
+    for key, val in config.config.items():
+        if isinstance(val, dict):
+            config_textfield.append(ft.Text(value=key))
+            config_textfield += [
+                ft.TextField(label=str(k), value=v) for k, v in val.items()
+            ]
+
     save_btn = ft.IconButton(icon=ft.Icons.SAVE)
     reset_btn = ft.ElevatedButton(text="Reset")
 
     def write_config(_):
         ok = True
         for i in config_textfield:
-            if str(i.label).split("_")[-1] == "path" and not os.path.exists(str(i.value)):
+            if str(i.label).split("_")[-1] == "path" and not os.path.exists(
+                str(i.value)
+            ):
                 i.error_text = "path not exist"
                 ok = False
         if ok:

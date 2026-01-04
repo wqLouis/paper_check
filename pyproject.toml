@@ -10,4 +10,5 @@ dependencies = [
     "paddleocr[doc-parser]>=3.3.2",
     "pymupdf>=1.26.7",
     "numpy>=2.4.0",
+    "paddlepaddle>=3.2.2",
 ]

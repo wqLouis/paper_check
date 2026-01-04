@@ -5,12 +5,13 @@ import sqlite3 as sql
 import fitz as pdf
 import flet as ft
 import numpy as np
-from paddleocr import PPStructureV3
 
 from src.config import config
 
 
 def ocr_to_str(imgs: list[np.ndarray]) -> str:
+    from paddleocr import PPStructureV3  # avoid too long loading time on start
+
     ocr = PPStructureV3()
     md = []
 
@@ -31,12 +32,17 @@ def page_content():
 
     def pick_file_result(e: ft.FilePickerResultEvent):
         files = (
-            list(map(lambda f: (f.name.split("_"), f.path), e.files)) if e.files else []
+            list(
+                map(lambda f: (os.path.splitext(f.name)[0].split("_"), f.path), e.files)
+            )
+            if e.files
+            else []
         )
+        print(files)
         if files == []:
             return
 
-        db_path = config.get("db_path")
+        db_path = (config.get("general") or {}).get("db_path")
         if not db_path:
             raise Exception("Broken config")
         con = sql.connect(db_path)
@@ -48,9 +54,9 @@ def page_content():
 
             if not file[0].isdigit():
                 continue
-            if file[1] not in (config.get("forms") or []):
+            if file[1] not in ((config.get("general") or {}).get("forms") or []):
                 continue
-            if file[2] not in (config.get("subjects") or []):
+            if file[2] not in ((config.get("general") or {}).get("subjects") or []):
                 continue
 
             if os.path.splitext(path)[1].lower() not in [".doc", ".docx", ".pdf"]:
@@ -82,11 +88,12 @@ def page_content():
                 doc.close()
                 del doc
                 content = ocr_to_str(imgs=img)
+                print(content)
 
             if content is None or content == "":
                 continue
 
-            paper_path = config.get("paper_path")
+            paper_path = (config.get("general") or {}).get("paper_path")
             if paper_path is None:
                 raise Exception("Broken config")
             try:

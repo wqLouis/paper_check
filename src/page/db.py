@@ -1,12 +1,13 @@
-import sqlite3 as sql
 import os
+import sqlite3 as sql
+
 import flet as ft
 
 from src.config import config
 
 
 def check_db():
-    db_path = config.get("db_path")
+    db_path = (config.get("general") or {}).get("db_path")
     if db_path is None:
         raise Exception("Broken config")
     if not os.path.exists(db_path):
@@ -25,23 +26,24 @@ def check_db():
 
 
 def init_db():
-    db_path = config.get("db_path")
+    db_path = (config.get("general") or {}).get("db_path")
     if db_path is None:
         raise Exception("Broken config")
 
     with sql.connect(db_path) as con:
         del db_path
         cur = con.cursor()
-        query = """CREATE TABLE [IF NOT EXISTS] papers (
+        query = """CREATE TABLE IF NOT EXISTS papers (
                     id INTEGER PRIMARY KEY,
                     year INTEGER NOT NULL,
                     form TEXT NOT NULL,
                     subject TEXT NOT NULL,
                     content TEXT NOT NULL,
-                    path TEXT NOT NULL,
-                    )"""
+                    path TEXT NOT NULL
+                    );"""
         try:
             cur.execute(query)
+            con.commit()
         except BaseException as e:
             raise e
 

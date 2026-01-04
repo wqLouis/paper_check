@@ -7,7 +7,7 @@ import toml
 config: dict = {
     "general": {
         "ocr_model_path": "",
-        "db_path": "",
+        "db_path": "./paper.db",
         "forms": ["f1", "f2", "f3", "f4", "f5", "f6"],
         "subjects": [
             "chin",

@@ -10,17 +10,9 @@ storage
 # Virtual environments
 .venv
 
-# models
-models/embeddings/*
-models/llm/*
-models/ocr/*
-
 # Others
 testing
-db/papers/*
-db/temp/*
-db/past_papers.db
-db/embed.db/*
+db/*
 
 # Config
 config.toml

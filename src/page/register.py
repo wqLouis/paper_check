@@ -38,7 +38,7 @@ def page_content():
             if e.files
             else []
         )
-        print(files)
+
         if files == []:
             return
 
@@ -104,7 +104,16 @@ def page_content():
             query = "INSERT INTO papers (year, form, subject, content, path) VALUES (?, ?, ?, ?, ?);"
             try:
                 cur.execute(
-                    query, (file + [content] + [paper_path + os.path.basename(path)])
+                    query,
+                    (
+                        file
+                        + [content]
+                        + [
+                            os.path.join(
+                                os.path.abspath(paper_path), os.path.basename(path)
+                            )
+                        ]
+                    ),
                 )
             except BaseException as err:
                 raise err

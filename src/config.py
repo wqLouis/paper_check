@@ -6,8 +6,8 @@ import toml
 
 config: dict = {
     "general": {
-        "ocr_model_path": "",
-        "db_path": "./paper.db",
+        "ocr_model_path": "./",
+        "db_path": "./db/paper.db",
         "forms": ["f1", "f2", "f3", "f4", "f5", "f6"],
         "subjects": [
             "chin",
@@ -25,9 +25,9 @@ config: dict = {
             "clit",
             "m2",
         ],
-        "paper_path": "",
+        "paper_path": "./db/",
     },
-    "paddle ocr": {"use_gpu?": True},
+    "paddle ocr": {},
 }
 fallback_config = config.copy()
 config_path: str = "./config.toml"
@@ -37,6 +37,25 @@ page_path: str = "./src/page/*.py"
 def commit():
     with open(config_path, "w") as f:
         toml.dump(config, f)
+
+
+def check_config():
+    broken_path = []
+    invalid_config = []
+    for key, val in config.items():
+        if isinstance(val, dict):
+            for k, v in val.items():
+                if isinstance(v, dict):
+                    invalid_config.append(".".join([key, k]))
+                if (
+                    isinstance(k, str)
+                    and k.split("_")[-1] == "path"
+                    and isinstance(v, str)
+                ):
+                    if not os.path.exists(v):
+                        broken_path.append(".".join([key, k]) + f"    path:{v}")
+    if len(broken_path) + len(invalid_config) > 0:
+        raise Exception(("\n".join(broken_path)) + "\n" + "\n".join(invalid_config))
 
 
 # init function
@@ -54,6 +73,11 @@ def init():
     try:
         with open(config_path, "r") as f:
             config = toml.load(f)
+        try:
+            check_config()
+        except BaseException as e:
+            print(e)
+            config = fallback_config
     except toml.decoder.TomlDecodeError:
         config = fallback_config
     except BaseException as e:

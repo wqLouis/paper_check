@@ -23,6 +23,11 @@ def check_db():
                 init_db()
             except BaseException as e:
                 raise e
+    if os.path.exists(db_path):
+        try:
+            init_db()
+        except BaseException as e:
+            raise e
 
 
 def init_db():
@@ -48,8 +53,46 @@ def init_db():
             raise e
 
 
+def build_table():
+    table = ft.DataTable(
+        columns=[
+            ft.DataColumn(ft.Text("Select")),
+            ft.DataColumn(ft.Text("id")),
+            ft.DataColumn(ft.Text("year")),
+            ft.DataColumn(ft.Text("form")),
+            ft.DataColumn(ft.Text("subject")),
+            ft.DataColumn(ft.Text("path")),
+            ft.DataColumn(ft.Text("content")),
+        ]
+    )
+
+    db_path = (config.get("general") or {}).get("db_path")
+    if not db_path:
+        raise Exception("Broken config")
+
+    with sql.connect(db_path) as con:
+        cur = con.cursor()
+        rows: list[ft.DataRow] = []
+
+        result = cur.execute("SELECT * FROM papers;").fetchall()
+        for i in result:
+            rows.append(
+                ft.DataRow(
+                    cells=[ft.DataCell(content=ft.Checkbox())]
+                    + [ft.DataCell(content=ft.Text(str(j))) for j in i]
+                )
+            )
+        table.rows = rows
+
+    return table
+
+
 def page_content():
-    return ft.Text("View database", size=24)
+    content_area = ft.Column(
+        controls=[ft.Text("View database", size=24)], scroll=ft.ScrollMode.ADAPTIVE
+    )
+    content_area.controls.append(build_table())
+    return content_area
 
 
 def menu_btn():

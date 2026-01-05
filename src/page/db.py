@@ -82,21 +82,57 @@ def build_table():
                 ft.DataRow(
                     cells=[ft.DataCell(content=ft.Checkbox())]
                     + [ft.DataCell(content=ft.Text(str(j))) for j in i[:4]]
-                    + [ft.DataCell(content=ft.ElevatedButton(text=os.path.abspath(i[5]), url=f"file:///{os.path.abspath(i[5])}"))]
+                    + [
+                        ft.DataCell(
+                            content=ft.ElevatedButton(
+                                text=os.path.basename(i[5]),
+                                url=f"file:///{os.path.abspath(i[5])}",
+                            )
+                        )
+                    ]
                     + [ft.DataCell(content=ft.Text(str(i[6])))]
-                    + [ft.DataCell(content=ft.ElevatedButton(text=os.path.abspath(i[4]), url=f"file:///{os.path.abspath(i[4])}"))]
+                    + [
+                        ft.DataCell(
+                            content=ft.ElevatedButton(
+                                text=os.path.basename(i[4]),
+                                url=f"file:///{os.path.abspath(i[4])}",
+                            )
+                        )
+                    ]
                 )
             )
         table.rows = rows
 
-    return table
+    return ft.Row([table], scroll=ft.ScrollMode.ADAPTIVE)
 
 
 def page_content():
     content_area = ft.Column(
         controls=[ft.Text("View database", size=24)], scroll=ft.ScrollMode.ADAPTIVE
     )
-    content_area.controls.append(build_table())
+
+    table = build_table()
+
+    def select_all(e):
+        pass
+
+    search_area = ft.Row(
+        spacing=12,
+        scroll=ft.ScrollMode.ADAPTIVE,
+        controls=[
+            ft.TextField(label="id"),
+            ft.TextField(label="year"),
+            ft.TextField(label="form"),
+            ft.TextField(label="subject"),
+            ft.TextField(label="notes"),
+            ft.IconButton(icon=ft.Icons.SEARCH),
+            ft.Checkbox(label="Select all", on_change=select_all),
+            ft.ElevatedButton(text="To check =>"),
+        ],
+    )
+
+    content_area.controls.append(search_area)
+    content_area.controls.append(table)
     return content_area
 
 

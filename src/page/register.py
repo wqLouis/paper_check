@@ -31,6 +31,8 @@ def page_content():
     )
 
     def pick_file_result(e: ft.FilePickerResultEvent):
+        log_update("File uploaded!")
+
         files = (
             list(
                 map(lambda f: (os.path.splitext(f.name)[0].split("_"), f.path), e.files)
@@ -38,6 +40,8 @@ def page_content():
             if e.files
             else []
         )
+
+        log_update(files)
 
         if files == []:
             return
@@ -58,6 +62,8 @@ def page_content():
                 continue
             if file[2] not in ((config.get("general") or {}).get("subjects") or []):
                 continue
+            if len(file) < 4:
+                file.append("N/A")
 
             if os.path.splitext(path)[1].lower() not in [".doc", ".docx", ".pdf"]:
                 continue
@@ -65,12 +71,13 @@ def page_content():
             if (
                 len(
                     cur.execute(
-                        "SELECT id FROM papers WHERE year = ? AND form = ? AND subject = ?;",
+                        "SELECT id FROM papers WHERE year = ? AND form = ? AND subject = ? AND notes = ?;",
                         file,
                     ).fetchall()
                 )
                 > 0
             ):
+                log_update(f"Found repeated passing: {path}")
                 continue  # check if repeated
 
             content: str | None = None
@@ -87,8 +94,9 @@ def page_content():
                 ]
                 doc.close()
                 del doc
+                log_update(f"Started ocr on {path}")
                 content = ocr_to_str(imgs=img)
-                print(content)
+                log_update("Ocr finished")
 
             if content is None or content == "":
                 continue
@@ -97,17 +105,30 @@ def page_content():
             if paper_path is None:
                 raise Exception("Broken config")
             try:
-                shutil.copy2(path, paper_path + os.path.basename(path))
+                shutil.copy2(path, os.path.join(paper_path, os.path.basename(path)))
             except BaseException as err:
                 raise err
 
-            query = "INSERT INTO papers (year, form, subject, content, path) VALUES (?, ?, ?, ?, ?);"
+            query = "INSERT INTO papers (year, form, subject, notes, content, path) VALUES (?, ?, ?, ?, ?, ?);"
             try:
+                markdown_path = (config.get("general") or {}).get("markdown_path")
+
+                if markdown_path is None:
+                    raise Exception("Broken config")
+
+                markdown_path = os.path.join(
+                    markdown_path,
+                    f"{os.path.splitext(os.path.basename(path))[0]}.md",
+                )
+
+                with open(markdown_path, "w+") as f:
+                    f.write(content)
+
                 cur.execute(
                     query,
                     (
                         file
-                        + [content]
+                        + [markdown_path]
                         + [
                             os.path.join(
                                 os.path.abspath(paper_path), os.path.basename(path)
@@ -127,6 +148,18 @@ def page_content():
         on_click=lambda _: file_picker.pick_files(allow_multiple=True),
     )
     log_text = ft.Text("")
+
+    def log_update(val):
+        if not isinstance(val, str):
+            try:
+                val = str(val)
+            except BaseException as e:
+                val = repr(e)
+        if log_text.value is None:
+            log_text.value = ""
+        log_text.value += val + "\n"
+        log.update()
+
     log = ft.Column(controls=[log_text], scroll=ft.ScrollMode.ADAPTIVE)
 
     content_area.controls.append(file_picker)

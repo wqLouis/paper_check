@@ -44,7 +44,8 @@ def init_db():
                     form TEXT NOT NULL,
                     subject TEXT NOT NULL,
                     content TEXT NOT NULL,
-                    path TEXT NOT NULL
+                    path TEXT NOT NULL,
+                    notes TEXT
                     );"""
         try:
             cur.execute(query)
@@ -62,6 +63,7 @@ def build_table():
             ft.DataColumn(ft.Text("form")),
             ft.DataColumn(ft.Text("subject")),
             ft.DataColumn(ft.Text("path")),
+            ft.DataColumn(ft.Text("notes")),
             ft.DataColumn(ft.Text("content")),
         ]
     )
@@ -79,7 +81,10 @@ def build_table():
             rows.append(
                 ft.DataRow(
                     cells=[ft.DataCell(content=ft.Checkbox())]
-                    + [ft.DataCell(content=ft.Text(str(j))) for j in i]
+                    + [ft.DataCell(content=ft.Text(str(j))) for j in i[:4]]
+                    + [ft.DataCell(content=ft.ElevatedButton(text=os.path.abspath(i[5]), url=f"file:///{os.path.abspath(i[5])}"))]
+                    + [ft.DataCell(content=ft.Text(str(i[6])))]
+                    + [ft.DataCell(content=ft.ElevatedButton(text=os.path.abspath(i[4]), url=f"file:///{os.path.abspath(i[4])}"))]
                 )
             )
         table.rows = rows

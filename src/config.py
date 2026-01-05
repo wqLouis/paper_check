@@ -25,7 +25,8 @@ config: dict = {
             "clit",
             "m2",
         ],
-        "paper_path": "./db/",
+        "paper_path": "./db/papers/",
+        "markdown_path": "./db/md/",
     },
     "paddle ocr": {},
 }

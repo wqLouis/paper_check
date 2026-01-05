@@ -11,8 +11,9 @@ storage
 .venv
 
 # Others
-testing
-db/*
+db/papers/*
+db/md/*
+db/paper.db
 
 # Config
 config.toml

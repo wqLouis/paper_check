@@ -54,7 +54,11 @@ def init_db():
             raise e
 
 
-def build_table():
+def build_table(
+    params: dict | None = None,
+    set_selected: dict | None = None,
+    selected: dict[str, bool] = {},
+):
     table = ft.DataTable(
         columns=[
             ft.DataColumn(ft.Text("Select")),
@@ -76,11 +80,38 @@ def build_table():
         cur = con.cursor()
         rows: list[ft.DataRow] = []
 
-        result = cur.execute("SELECT * FROM papers;").fetchall()
+        result = (
+            cur.execute(
+                """
+            SELECT * FROM papers
+            WHERE (:id = '' OR id = :id)
+            AND (:form = '' OR form = :form)
+            AND (:subject = '' OR subject = :subject)
+            AND (:notes = '' OR notes = :notes)
+            AND (:from_year = '' OR year >= :from_year)
+            AND (:to_year = '' OR year <= :to_year);""",
+                params,
+            ).fetchall()
+            if params is not None
+            else cur.execute("SELECT * FROM papers;").fetchall()
+        )
         for i in result:
             rows.append(
                 ft.DataRow(
-                    cells=[ft.DataCell(content=ft.Checkbox())]
+                    cells=[
+                        ft.DataCell(
+                            content=ft.Checkbox(
+                                value=False
+                                if set_selected is None
+                                else True
+                                if set_selected.get(str(i[0]))
+                                else False,
+                                on_change=lambda e: selected.update(
+                                    {str(i[0]): True if e.data == "true" else False}
+                                ),
+                            )
+                        )
+                    ]
                     + [ft.DataCell(content=ft.Text(str(j))) for j in i[:4]]
                     + [
                         ft.DataCell(
@@ -103,7 +134,7 @@ def build_table():
             )
         table.rows = rows
 
-    return ft.Row([table], scroll=ft.ScrollMode.ADAPTIVE)
+    return table
 
 
 def page_content():
@@ -113,19 +144,53 @@ def page_content():
 
     table = build_table()
 
-    def select_all(e):
+    selected = {
+        i.cells[1].content.value or ""
+        if isinstance(i.cells[1].content, ft.Text)
+        else "": False
+        for i in table.rows or []
+    }
+
+    table.rows = build_table(selected=selected).rows
+
+    def select_all(e: ft.ControlEvent):
+        checkboxes = [i.cells[0].content for i in table.rows or []]
+        ids = [i.cells[1].content for i in table.rows or []]
+        for checkbox, id in zip(checkboxes, ids):
+            if isinstance(checkbox, ft.Checkbox):
+                checkbox.value = True if e.data == "true" else False
+            if isinstance(id, ft.Text):
+                selected[id.value or ""] = True if e.data == "true" else False
+
+        table.update()
+
+    def search(_):
+        text_fields = [i for i in search_area.controls[:6]]
+        params = {}
+        for i in text_fields:
+            if isinstance(i, ft.TextField):
+                params[i.label] = i.value if i.value is not None else ""
+
+        table.rows = build_table(
+            params=params, set_selected=selected, selected=selected
+        ).rows
+        table.update()
+
+    def check_page():
+        """Redirect to another check page"""
         pass
 
     search_area = ft.Row(
         spacing=12,
         scroll=ft.ScrollMode.ADAPTIVE,
         controls=[
-            ft.TextField(label="id"),
-            ft.TextField(label="year"),
-            ft.TextField(label="form"),
-            ft.TextField(label="subject"),
-            ft.TextField(label="notes"),
-            ft.IconButton(icon=ft.Icons.SEARCH),
+            ft.TextField(label="id", width=100),
+            ft.TextField(label="from_year", width=100),
+            ft.TextField(label="to_year", width=100),
+            ft.TextField(label="form", width=100),
+            ft.TextField(label="subject", width=100),
+            ft.TextField(label="notes", width=100),
+            ft.IconButton(icon=ft.Icons.SEARCH, on_click=search),
             ft.Checkbox(label="Select all", on_change=select_all),
             ft.ElevatedButton(text="To check =>"),
         ],

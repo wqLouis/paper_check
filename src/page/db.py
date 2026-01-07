@@ -1,4 +1,5 @@
 import os
+import pathlib
 import sqlite3 as sql
 
 import flet as ft
@@ -10,7 +11,8 @@ def check_db():
     db_path = (config.get("general") or {}).get("db_path")
     if db_path is None:
         raise Exception("Broken config")
-    if not os.path.exists(db_path):
+    db_path = pathlib.Path(db_path)
+    if not db_path.exists:
         try:
             init_db()
         except BaseException as e:
@@ -23,7 +25,7 @@ def check_db():
                 init_db()
             except BaseException as e:
                 raise e
-    if os.path.exists(db_path):
+    if db_path.exists:
         try:
             init_db()
         except BaseException as e:
@@ -116,8 +118,8 @@ def build_table(
                     + [
                         ft.DataCell(
                             content=ft.ElevatedButton(
-                                text=os.path.basename(i[5]),
-                                url=f"file:///{os.path.abspath(i[5])}",
+                                text=pathlib.Path(i[5]).name,
+                                url=f"file:///{pathlib.Path(i[5]).resolve()}",
                             )
                         )
                     ]
@@ -125,8 +127,8 @@ def build_table(
                     + [
                         ft.DataCell(
                             content=ft.ElevatedButton(
-                                text=os.path.basename(i[4]),
-                                url=f"file:///{os.path.abspath(i[4])}",
+                                text=pathlib.Path(i[4]).name,
+                                url=f"file:///{pathlib.Path(i[4]).resolve()}",
                             )
                         )
                     ]

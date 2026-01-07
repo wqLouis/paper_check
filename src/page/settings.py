@@ -1,4 +1,4 @@
-import os
+import pathlib
 
 import flet as ft
 
@@ -22,8 +22,9 @@ def page_content():
     def write_config(_):
         ok = True
         for i in config_textfield:
-            if str(i.label).split("_")[-1] == "path" and not os.path.exists(
-                str(i.value)
+            if (
+                str(i.label).split("_")[-1] == "path"
+                and not pathlib.Path(str(i.value)).exists
             ):
                 i.error_text = "path not exist"
                 ok = False
@@ -47,7 +48,7 @@ def page_content():
             ft.Text("Settings", size=24),
             ft.TextField(
                 label="config path",
-                value=f"{os.path.abspath(config.config_path)}",
+                value=f"{config.config_path.resolve()}",
                 read_only=True,
             ),
         ]

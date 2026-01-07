@@ -2,7 +2,7 @@
 
 import glob
 import importlib
-import os
+import pathlib
 
 import flet as ft
 
@@ -27,8 +27,7 @@ class Bar:
         self.page = page
 
         pages = [
-            "src.page." + os.path.splitext(os.path.basename(i))[0]
-            for i in glob.glob(config.page_path)
+            "src.page." + pathlib.Path(i).stem for i in glob.glob(config.page_path)
         ]
         modules = [importlib.import_module(i) for i in pages]
 

@@ -1,4 +1,4 @@
-import os
+import pathlib
 import shutil
 import sqlite3 as sql
 
@@ -34,9 +34,7 @@ def page_content():
         log_update("File uploaded!")
 
         files = (
-            list(
-                map(lambda f: (os.path.splitext(f.name)[0].split("_"), f.path), e.files)
-            )
+            list(map(lambda f: (pathlib.Path(f.name).name.split("_"), f.path), e.files))
             if e.files
             else []
         )
@@ -54,7 +52,7 @@ def page_content():
 
         for i in files:
             file = i[0]
-            path = i[1]
+            path = pathlib.Path(i[1])
 
             if not file[0].isdigit():
                 continue
@@ -78,9 +76,9 @@ def page_content():
                 continue  # check if repeated
 
             content: str | None = None
-            if os.path.splitext(path)[1].lower() in [".doc", ".docx"]:
+            if path.suffix.lower() in [".doc", ".docx"]:
                 print("currently not support docx or doc\nFuck you Microsoft :(")
-            if os.path.splitext(path)[1].lower() == ".pdf":
+            if path.suffix.lower() == ".pdf":
                 doc = pdf.open(path)
                 img = [doc.load_page(i).get_pixmap() for i in range(len(doc))]
                 img = [
@@ -101,8 +99,12 @@ def page_content():
             paper_path = (config.get("general") or {}).get("paper_path")
             if paper_path is None:
                 raise Exception("Broken config")
+            paper_path = pathlib.Path(paper_path)
             try:
-                shutil.copy2(path, os.path.join(paper_path, os.path.basename(path)))
+                shutil.copy2(
+                    path,
+                    paper_path / path.name,
+                )
             except BaseException as err:
                 raise err
 
@@ -113,25 +115,14 @@ def page_content():
                 if markdown_path is None:
                     raise Exception("Broken config")
 
-                markdown_path = os.path.join(
-                    markdown_path,
-                    f"{os.path.splitext(os.path.basename(path))[0]}.md",
-                )
+                markdown_path = pathlib.Path(markdown_path) / f"{path.stem}.md"
 
                 with open(markdown_path, "w+") as f:
                     f.write(content)
 
                 cur.execute(
                     query,
-                    (
-                        file
-                        + [markdown_path]
-                        + [
-                            os.path.join(
-                                os.path.abspath(paper_path), os.path.basename(path)
-                            )
-                        ]
-                    ),
+                    (file + [markdown_path] + [paper_path.resolve() / path.name]),
                 )
             except BaseException as err:
                 raise err

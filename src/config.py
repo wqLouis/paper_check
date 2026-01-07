@@ -1,6 +1,6 @@
 """This is a script for reading and writing config files"""
 
-import os
+import pathlib
 
 import toml
 
@@ -31,12 +31,12 @@ config: dict = {
     "paddle ocr": {},
 }
 fallback_config = config.copy()
-config_path: str = "./config.toml"
+config_path = pathlib.Path("./config.toml")
 page_path: str = "./src/page/*.py"
 
 
 def commit():
-    with open(config_path, "w") as f:
+    with open(config_path, "w+") as f:
         toml.dump(config, f)
 
 
@@ -53,7 +53,7 @@ def check_config():
                     and k.split("_")[-1] == "path"
                     and isinstance(v, str)
                 ):
-                    if not os.path.exists(v):
+                    if not pathlib.Path(v).exists:
                         broken_path.append(".".join([key, k]) + f"    path:{v}")
     if len(broken_path) + len(invalid_config) > 0:
         raise Exception(("\n".join(broken_path)) + "\n" + "\n".join(invalid_config))
@@ -63,12 +63,11 @@ def check_config():
 def init():
     global config
 
-    if not os.path.exists(os.path.dirname(config_path)):
-        try:
-            os.mkdir(os.path.dirname(config_path))
-        except BaseException as e:
-            raise e
-    if not os.path.exists(config_path):
+    try:
+        config_path.parent.mkdir(exist_ok=True, parents=True)
+    except BaseException as e:
+        raise e
+    if not config_path.exists:
         commit()
 
     try:

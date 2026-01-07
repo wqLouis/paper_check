@@ -65,9 +65,6 @@ def page_content():
             if len(file) < 4:
                 file.append("N/A")
 
-            if os.path.splitext(path)[1].lower() not in [".doc", ".docx", ".pdf"]:
-                continue
-
             if (
                 len(
                     cur.execute(
@@ -145,7 +142,9 @@ def page_content():
     file_picker = ft.FilePicker(on_result=pick_file_result)
     btn = ft.ElevatedButton(
         text="select folder",
-        on_click=lambda _: file_picker.pick_files(allow_multiple=True),
+        on_click=lambda _: file_picker.pick_files(
+            allow_multiple=True, allowed_extensions=["pdf", "doc", "docx"]
+        ),
     )
     log_text = ft.Text("")
 

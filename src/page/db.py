@@ -176,9 +176,13 @@ def page_content():
         ).rows
         table.update()
 
-    def check_page():
+    def check_page(e):
         """Redirect to another check page"""
-        pass
+        import src.page.check_page.check_page as check_page
+
+        nonlocal content_area
+        content_area.controls = [check_page.page_content(selected=selected)]
+        content_area.update()
 
     search_area = ft.Row(
         spacing=12,
@@ -192,7 +196,7 @@ def page_content():
             ft.TextField(label="notes", width=100),
             ft.IconButton(icon=ft.Icons.SEARCH, on_click=search),
             ft.Checkbox(label="Select all", on_change=select_all),
-            ft.ElevatedButton(text="To check =>"),
+            ft.ElevatedButton(text="To check =>", on_click=check_page),
         ],
     )
 

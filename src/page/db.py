@@ -12,7 +12,7 @@ def check_db():
     if db_path is None:
         raise Exception("Broken config")
     db_path = pathlib.Path(db_path)
-    if not db_path.exists:
+    if not db_path.exists():
         try:
             init_db()
         except BaseException as e:
@@ -25,7 +25,7 @@ def check_db():
                 init_db()
             except BaseException as e:
                 raise e
-    if db_path.exists:
+    if db_path.exists():
         try:
             init_db()
         except BaseException as e:

@@ -27,6 +27,7 @@ config: dict = {
         ],
         "paper_path": "./db/papers/",
         "markdown_path": "./db/md/",
+        "reports_path": "./reports/",
     },
     "paddle ocr": {},
 }
@@ -53,7 +54,7 @@ def check_config():
                     and k.split("_")[-1] == "path"
                     and isinstance(v, str)
                 ):
-                    if not pathlib.Path(v).exists:
+                    if not pathlib.Path(v).exists():
                         broken_path.append(".".join([key, k]) + f"    path:{v}")
     if len(broken_path) + len(invalid_config) > 0:
         raise Exception(("\n".join(broken_path)) + "\n" + "\n".join(invalid_config))
@@ -67,7 +68,7 @@ def init():
         config_path.parent.mkdir(exist_ok=True, parents=True)
     except BaseException as e:
         raise e
-    if not config_path.exists:
+    if not config_path.exists():
         commit()
 
     try:

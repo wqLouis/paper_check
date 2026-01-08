@@ -14,6 +14,7 @@ storage
 db/papers/*
 db/md/*
 db/paper.db
+reports/*
 
 # Config
 config.toml

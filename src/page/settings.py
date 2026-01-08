@@ -24,7 +24,7 @@ def page_content():
         for i in config_textfield:
             if (
                 str(i.label).split("_")[-1] == "path"
-                and not pathlib.Path(str(i.value)).exists
+                and not pathlib.Path(str(i.value)).exists()
             ):
                 i.error_text = "path not exist"
                 ok = False

@@ -63,7 +63,7 @@ def page_content(selected: dict[str, bool] = {}):
         nonlocal register_to_db
         register_to_db = True if e.data == "true" else False
 
-    status_text = ft.Text("")
+    status_text = ft.Text(f"{selected}\n")
 
     content_area = ft.Column(scroll=ft.ScrollMode.ADAPTIVE)
     content_area.controls.append(

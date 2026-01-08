@@ -74,6 +74,24 @@ def build_table(
         ]
     )
 
+    selected_id = {}
+
+    def on_checkbox_changed(e: ft.ControlEvent):
+        selected_id[e.control.uid] = e.data
+
+        def sync_to_selected():
+            for i in table.rows or []:
+                if isinstance(i.cells[1].content, ft.Text):
+                    selected.update(
+                        {
+                            i.cells[1].content.value or "": True
+                            if selected_id.get(i.cells[0].content.uid) == "true"
+                            else False
+                        }
+                    )
+
+        sync_to_selected()
+
     db_path = (config.get("general") or {}).get("db_path")
     if not db_path:
         raise Exception("Broken config")
@@ -108,9 +126,7 @@ def build_table(
                                 else True
                                 if set_selected.get(str(i[0]))
                                 else False,
-                                on_change=lambda e: selected.update(
-                                    {str(i[0]): True if e.data == "true" else False}
-                                ),
+                                on_change=on_checkbox_changed,
                             )
                         )
                     ]

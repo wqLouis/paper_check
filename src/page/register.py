@@ -9,16 +9,19 @@ import numpy as np
 from src.config import config
 
 
-def ocr_to_str(imgs: list[np.ndarray]) -> str:
+def ocr_to_str(imgs: list[np.ndarray], pb: ft.ProgressBar | None = None) -> str:
     from paddleocr import PPStructureV3  # avoid too long loading time on start
 
     ocr = PPStructureV3()
     md = []
 
-    for i in imgs:
+    for idx, i in enumerate(imgs):
         page = ocr.predict(i)
         for j in page:
             md.append(j.markdown)
+        if pb:
+            pb.value = float(idx + 1) / float(len(imgs))
+            pb.update()
 
     md = ocr.concatenate_markdown_pages(md)
 
@@ -34,7 +37,7 @@ def page_content():
         log_update("File uploaded!")
 
         files = (
-            list(map(lambda f: (pathlib.Path(f.name).name.split("_"), f.path), e.files))
+            list(map(lambda f: (pathlib.Path(f.name).stem.split("_"), f.path), e.files))
             if e.files
             else []
         )
@@ -90,7 +93,7 @@ def page_content():
                 doc.close()
                 del doc
                 log_update(f"Started ocr on {path}")
-                content = ocr_to_str(imgs=img)
+                content = ocr_to_str(imgs=img, pb=pb)
                 log_update("Ocr finished")
 
             if content is None or content == "":
@@ -122,7 +125,11 @@ def page_content():
 
                 cur.execute(
                     query,
-                    (file + [markdown_path] + [paper_path.resolve() / path.name]),
+                    (
+                        file
+                        + [markdown_path.as_posix()]
+                        + [(paper_path.resolve() / path.name).as_posix()]
+                    ),
                 )
             except BaseException as err:
                 raise err
@@ -138,6 +145,7 @@ def page_content():
         ),
     )
     log_text = ft.Text("")
+    pb = ft.ProgressBar(value=0)
 
     def log_update(val):
         if not isinstance(val, str):
@@ -154,6 +162,7 @@ def page_content():
 
     content_area.controls.append(file_picker)
     content_area.controls.append(btn)
+    content_area.controls.append(pb)
     content_area.controls.append(log)
 
     return content_area

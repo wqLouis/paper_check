@@ -89,6 +89,9 @@ def page_content(selected: dict[str, bool] = {}):
     def check_file(e: ft.FilePickerResultEvent):
         status_text.value = "" if status_text.value is None else status_text.value
         log("Started: DO NOT SWITCH TO OTHER PAGE!")
+        if e.files is None:
+            log("No file selected")
+            return
         path = pathlib.Path((e.files or [])[0].path)
         with pdf.open(path) as f:
             imgs = [f.load_page(i).get_pixmap() for i in range(len(f))]

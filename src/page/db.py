@@ -7,35 +7,12 @@ import flet as ft
 from src.config import config
 
 
-def check_db():
-    db_path = (config.get("general") or {}).get("db_path")
-    if db_path is None:
-        raise Exception("Broken config")
-    db_path = pathlib.Path(db_path)
-    if not db_path.exists():
-        try:
-            init_db()
-        except BaseException as e:
-            raise e
-        try:
-            sql.connect(db_path)
-        except BaseException:
-            try:
-                os.remove(db_path)
-                init_db()
-            except BaseException as e:
-                raise e
-    if db_path.exists():
-        try:
-            init_db()
-        except BaseException as e:
-            raise e
-
-
 def init_db():
     db_path = (config.get("general") or {}).get("db_path")
     if db_path is None:
         raise Exception("Broken config")
+    db_path = pathlib.Path(db_path)
+    os.makedirs(db_path.parent, exist_ok=True)
 
     with sql.connect(db_path) as con:
         del db_path

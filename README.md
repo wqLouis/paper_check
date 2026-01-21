@@ -11,7 +11,7 @@ This project is designed to analyze academic examination papers for textual simi
 ### Features
 
 - PDF file input
-- Text similarity analysis (WIP)
+- Text similarity analysis
 
 ### Installation
 
@@ -19,14 +19,8 @@ This project is designed to analyze academic examination papers for textual simi
 2. Create and activate virtual environment:
 
 ```bash
-uv venv
-.\.venv\Scripts\activate
-```
-
-3. Install dependencies:
-
-```bash
-uv pip install -e .
+uv sync
+. ./.venv/bin/activate
 ```
 
 ### Usage
